@@ -8,7 +8,10 @@ const SQRT_2: f32 = 1.41421;
 const SCREEN_X: usize = 70;
 const SCREEN_Y: usize = 25;
 
-#[derive(Debug)]
+const ANSI_RESET: &str = "\x1b[0m";
+
+
+#[derive(Debug, Clone, Copy)]
 struct Position {
     x: f32,
     y: f32,
@@ -20,6 +23,36 @@ struct Cubie {
     rotation: f32,
 }
 
+#[derive(Clone, Copy)]
+enum Color {
+    White,
+    Blue,
+    Red,
+    Gray,
+}
+
+impl Color {
+    fn to_ansi(&self) -> &str {
+        match self {
+            Color::White => "\x1b[97m",
+            Color::Blue  => "\x1b[94m",
+            Color::Red   => "\x1b[91m",
+            Color::Gray  => "\x1b[90m",
+        }
+    }
+}
+
+struct Face {
+    corners: [Position; 4],
+    color: Color,
+}
+
+impl Face {
+    fn avg_z(&self) -> f32 {
+        (self.corners[0].z + self.corners[1].z + self.corners[2].z + self.corners[3].z) / 4.0
+    }
+}
+
 impl Cubie {
     fn new(position: (f32, f32, f32), rotation: f32) -> Cubie {
         let (x, y, z) = position;
@@ -29,37 +62,56 @@ impl Cubie {
         }
     }
 
-    fn corners(&self) -> Vec<Position> {
-        let mut results = Vec::new();
+    fn faces(&self) -> Vec<Face> {
         let half = CUBE_SIZE / 2.0;
         let (x, y, z) = (self.position.x, self.position.y, self.position.z);
-        let y_p = y + half;
-        let y_pp = y - half;
+        let y_top = y + half;
+        let y_bot = y - half;
 
         let r = half * SQRT_2;
         let sin_r = self.rotation.sin() * r;
         let cos_r = self.rotation.cos() * r;
 
-        let perpendicular = [(sin_r, cos_r), (cos_r, -sin_r)];
-        for yy in [y_p, y_pp] {
-            for perp in perpendicular {
-                for d in [1.0, -1.0] {
-                    results.push(Position{
-                        x: x + d * perp.0,
-                        y: yy,
-                        z: z + d * perp.1
-                    });
-                }
-            }
-        }
+        let corners = [
+            Position{x: x + sin_r, y: y_top, z: z + cos_r},
+            Position{x: x + cos_r, y: y_top, z: z - sin_r},
+            Position{x: x - sin_r, y: y_top, z: z - cos_r},
+            Position{x: x - cos_r, y: y_top, z: z + sin_r},
+
+            Position{x: x + sin_r, y: y_bot, z: z + cos_r},
+            Position{x: x + cos_r, y: y_bot, z: z - sin_r},
+            Position{x: x - sin_r, y: y_bot, z: z - cos_r},
+            Position{x: x - cos_r, y: y_bot, z: z + sin_r},
+        ];
+
+        // let perpendicular = [(sin_r, cos_r), (cos_r, -sin_r)];
+        // let mut corners = vec![];
+        // for yy in [y_top, y_bot] {
+        //     for perp in perpendicular {
+        //         for d in [1.0, -1.0] {
+        //             corners.push(Position{
+        //                 x: x + d * perp.0,
+        //                 y: yy,
+        //                 z: z + d * perp.1
+        //             });
+        //         }
+        //     }
+        // }
         // println!("{}", self.rotation);
 
-        results
+        vec![
+            Face{corners: [corners[0], corners[1], corners[2], corners[3]], color: Color::White},
+            Face{corners: [corners[0], corners[3], corners[4], corners[7]], color: Color::Blue},
+            Face{corners: [corners[0], corners[1], corners[4], corners[5]], color: Color::Red},
+            Face{corners: [corners[1], corners[2], corners[5], corners[6]], color: Color::Gray},
+            Face{corners: [corners[2], corners[3], corners[6], corners[7]], color: Color::Gray},
+            Face{corners: [corners[4], corners[5], corners[6], corners[7]], color: Color::Gray},
+        ]
     }
 }
 
 struct Screen {
-    screen: [[bool; SCREEN_X]; SCREEN_Y],
+    screen: [[Option<Color>; SCREEN_X]; SCREEN_Y],
     zp: f32,
     something: f32,
 }
@@ -67,45 +119,49 @@ struct Screen {
 impl Screen {
     fn new(zp: f32, something: f32) -> Screen {
         Screen {
-            screen: [[false; SCREEN_X]; SCREEN_Y],
+            screen: [[None; SCREEN_X]; SCREEN_Y],
             zp,
             something
         }
     }
 
     fn render_cubie(&mut self, cubie: &Cubie) {
-        let corners = cubie.corners();
-        for corner in corners {
-            // println!("{:?}", corner);
-            let position = corner;
-            let multiplier = self.zp / position.z;
-            let xp = position.x * multiplier;
-            let yp = position.y * multiplier;
-    
-            let x_proj = (xp * self.something) as usize;
-            let y_proj = (yp * self.something) as usize;
-
-            self.screen[y_proj][x_proj] = true;
+        let mut faces = cubie.faces();
+        faces.sort_by(|a, b| a.avg_z().partial_cmp(&b.avg_z()).unwrap());
+        
+        for face in faces {
+            let corners = face.corners;
+            for corner in corners {
+                // println!("{:?}", corner);
+                let position = corner;
+                let multiplier = self.zp / position.z;
+                let xp = position.x * multiplier;
+                let yp = position.y * multiplier;
+                
+                let x_proj = (xp * self.something) as usize;
+                let y_proj = (yp * self.something) as usize;
+                
+                self.screen[y_proj][x_proj] = Some(face.color);
+            }
         }
     }
 
     fn print_screen(&self) {
         for y in (0..SCREEN_Y).rev() {
             for x in 0..SCREEN_X {
-                let pixel = if self.screen[y][x] { '#' } else { ' ' };
-                print!("{}", pixel);
+                // let pixel = if self.screen[y][x] { '#' } else { ' ' };
+                match self.screen[y][x] {
+                    Some(color) => print!("{}#{}", color.to_ansi(), ANSI_RESET),
+                    _ => print!(" ")
+                };
+                // print!("{}#{}", color.to_ansi(), ANSI_RESET);
+                // print!("{}", pixel);
             }
             println!();
         }
     }
 
-    // fn clear_screen() {
-        // print!("\x1B[2J\x1B[1;1H");
-    // }
-
     fn move_cursor_up() {
-        // print!("\x1B[{}A", SCREEN_Y);
-        // print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
         print!("{esc}c", esc = 27 as char);
         io::stdout().flush().unwrap();
     }
