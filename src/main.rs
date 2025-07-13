@@ -1,12 +1,19 @@
 use std::{thread, time::Duration};
 use std::io::{self, Write};
 
-const CUBE_SIZE: f32 = 1.0;
+const CUBE_SIZE: f32 = 2.0;
+const X_INIT: f32 = 0.0;
+const Y_INIT: f32 = 0.0;
+const Z_INIT: f32 = 5.0;
+const ZP: f32 = 5.0;
+const SOMETHING: f32 = 10.0;
+
+
 // const SQRT_3: f32 = 1.73205;
 const SQRT_2: f32 = 1.41421;
 
 const SCREEN_X: usize = 70;
-const SCREEN_Y: usize = 25;
+const SCREEN_Y: usize = 45;
 
 const ANSI_RESET: &str = "\x1b[0m";
 
@@ -26,8 +33,11 @@ struct Cubie {
 #[derive(Clone, Copy)]
 enum Color {
     White,
+    Yellow,
     Blue,
     Red,
+    Green,
+    Orange,
     Gray,
 }
 
@@ -35,9 +45,12 @@ impl Color {
     fn to_ansi(&self) -> &str {
         match self {
             Color::White => "\x1b[97m",
+            Color::Yellow => "\x1b[93m",
             Color::Blue  => "\x1b[94m",
             Color::Red   => "\x1b[91m",
             Color::Gray  => "\x1b[90m",
+            Color::Orange => "\x1b[95m",
+            Color::Green => "\x1b[92m"
         }
     }
 }
@@ -101,13 +114,34 @@ impl Cubie {
 
         vec![
             Face{corners: [corners[0], corners[1], corners[2], corners[3]], color: Color::White},
-            Face{corners: [corners[0], corners[3], corners[4], corners[7]], color: Color::Blue},
-            Face{corners: [corners[0], corners[1], corners[4], corners[5]], color: Color::Red},
-            Face{corners: [corners[1], corners[2], corners[5], corners[6]], color: Color::Gray},
-            Face{corners: [corners[2], corners[3], corners[6], corners[7]], color: Color::Gray},
-            Face{corners: [corners[4], corners[5], corners[6], corners[7]], color: Color::Gray},
+            Face{corners: [corners[0], corners[3], corners[7], corners[4]], color: Color::Blue},
+            Face{corners: [corners[1], corners[0], corners[4], corners[5]], color: Color::Red},
+            Face{corners: [corners[2], corners[1], corners[5], corners[6]], color: Color::Green},
+            Face{corners: [corners[3], corners[2], corners[6], corners[7]], color: Color::Yellow},
+            Face{corners: [corners[5], corners[4], corners[7], corners[6]], color: Color::Yellow},
         ]
     }
+}
+
+fn point_in_triangle(p: Point2D, a: Point2D, b: Point2D, c: Point2D) -> bool {
+    let area = |p1: Point2D, p2: Point2D, p3: Point2D| -> isize {
+        (p1.x * (p2.y - p3.y) +
+         p2.x * (p3.y - p1.y) +
+         p3.x * (p1.y - p2.y)).abs()
+    };
+
+    let total = area(a, b, c);
+    let a1 = area(p, b, c);
+    let a2 = area(a, p, c);
+    let a3 = area(a, b, p);
+
+    a1 + a2 + a3 <= total + 1
+}
+
+#[derive(Debug, Clone, Copy)]
+struct Point2D {
+    x: isize,
+    y: isize,
 }
 
 struct Screen {
@@ -128,34 +162,75 @@ impl Screen {
     fn render_cubie(&mut self, cubie: &Cubie) {
         let mut faces = cubie.faces();
         faces.sort_by(|a, b| a.avg_z().partial_cmp(&b.avg_z()).unwrap());
+
+        // for face in faces.iter() {
+            // println!("avg = {}", face.avg_z());
+        // }
+        // println!("--------------");
         
-        for face in faces {
-            let corners = face.corners;
-            for corner in corners {
-                // println!("{:?}", corner);
-                let position = corner;
-                let multiplier = self.zp / position.z;
-                let xp = position.x * multiplier;
-                let yp = position.y * multiplier;
-                
-                let x_proj = (xp * self.something) as usize;
-                let y_proj = (yp * self.something) as usize;
-                
-                self.screen[y_proj][x_proj] = Some(face.color);
+        for face in faces.into_iter().take(3).rev() {
+            // self.print_screen();
+            // std::thread::sleep(Duration::from_millis(1000));
+
+            // println!("avg = {}", face.avg_z());
+            let corners = face.corners; 
+
+            // fill faces
+            let mut projected: [Point2D; 4] = [Point2D {x: 0, y: 0}; 4];
+            for (i, corner) in corners.iter().enumerate() {
+                let multiplier = self.zp / corner.z;
+                let xp = corner.x * multiplier;
+                let yp = corner.y * multiplier;
+
+                let x_proj = (xp * self.something) as isize + 30;
+                let y_proj = (yp * self.something) as isize + 15;
+
+                // println!("{} : {}", x_proj, y_proj);
+
+                projected[i] = Point2D {x: x_proj, y: y_proj};
+                // self.screen[y_proj as usize][x_proj as usize] = Some(Color::Green);
             }
+
+            let tris = [
+                (projected[0], projected[1], projected[2]),
+                (projected[0], projected[2], projected[3]),
+            ];
+
+            for (a, b, c) in tris {
+                let min_x = a.x.min(b.x.min(c.x)).max(0);
+                let max_x = a.x.max(b.x.max(c.x)).min(SCREEN_X as isize - 1);
+                let min_y = a.y.min(b.y.min(c.y)).max(0);
+                let max_y = a.y.max(b.y.max(c.y)).min(SCREEN_Y as isize - 1);
+
+                for y in min_y..=max_y {
+                    for x in min_x..=max_x {
+                        let p = Point2D {x, y};
+                        if point_in_triangle(p, a, b, c) {
+                            self.screen[y as usize][x as usize] = Some(face.color);
+                        }
+                    }
+                }
+            }
+
+            for proj in projected {
+                let x_proj = proj.x;
+                let y_proj = proj.y;
+                self.screen[y_proj as usize][x_proj as usize] = Some(Color::Orange);
+            }
+
         }
     }
 
     fn print_screen(&self) {
-        for y in (0..SCREEN_Y).rev() {
-            for x in 0..SCREEN_X {
-                // let pixel = if self.screen[y][x] { '#' } else { ' ' };
+        let char = "██";
+        // let char = "##";
+        let window = 0;
+        for y in (window..(SCREEN_Y-window)).rev() {
+            for x in window..(SCREEN_X-window) {
                 match self.screen[y][x] {
-                    Some(color) => print!("{}#{}", color.to_ansi(), ANSI_RESET),
-                    _ => print!(" ")
+                    Some(color) => print!("{}{char}{}", color.to_ansi(), ANSI_RESET),
+                    _ => print!("  ")
                 };
-                // print!("{}#{}", color.to_ansi(), ANSI_RESET);
-                // print!("{}", pixel);
             }
             println!();
         }
@@ -168,7 +243,7 @@ impl Screen {
 }
 
 fn cube() {
-    let position: (f32, f32, f32) = (5.0, 2.0, 5.0);
+    let position: (f32, f32, f32) = (X_INIT, Y_INIT, Z_INIT);
     let mut angle = 0.0;
 
     // let mut somet = 3.0;
@@ -176,14 +251,14 @@ fn cube() {
         // Screen::clear_screen();
         let cubie = Cubie::new(position, angle);
         
-        let mut screen = Screen::new(5.0, 8.0);
+        let mut screen = Screen::new(ZP, SOMETHING);
         
         screen.render_cubie(&cubie);
         screen.print_screen();
 
         angle += 0.1;
         // somet += 0.1;
-        thread::sleep(Duration::from_millis(100));
+        thread::sleep(Duration::from_millis(300));
         Screen::move_cursor_up();
     }
 }
