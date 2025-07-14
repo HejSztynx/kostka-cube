@@ -38,6 +38,7 @@ enum Color {
     Red,
     Green,
     Orange,
+    Magenta,
     Gray,
 }
 
@@ -49,7 +50,8 @@ impl Color {
             Color::Blue  => "\x1b[94m",
             Color::Red   => "\x1b[91m",
             Color::Gray  => "\x1b[90m",
-            Color::Orange => "\x1b[95m",
+            Color::Orange => "\x1b[38;5;208m",
+            Color::Magenta => "\x1b[95m",
             Color::Green => "\x1b[92m"
         }
     }
@@ -117,7 +119,7 @@ impl Cubie {
             Face{corners: [corners[0], corners[3], corners[7], corners[4]], color: Color::Blue},
             Face{corners: [corners[1], corners[0], corners[4], corners[5]], color: Color::Red},
             Face{corners: [corners[2], corners[1], corners[5], corners[6]], color: Color::Green},
-            Face{corners: [corners[3], corners[2], corners[6], corners[7]], color: Color::Yellow},
+            Face{corners: [corners[3], corners[2], corners[6], corners[7]], color: Color::Orange},
             Face{corners: [corners[5], corners[4], corners[7], corners[6]], color: Color::Yellow},
         ]
     }
@@ -215,7 +217,7 @@ impl Screen {
             for proj in projected {
                 let x_proj = proj.x;
                 let y_proj = proj.y;
-                self.screen[y_proj as usize][x_proj as usize] = Some(Color::Orange);
+                self.screen[y_proj as usize][x_proj as usize] = Some(Color::Magenta);
             }
 
         }
@@ -229,6 +231,7 @@ impl Screen {
             for x in window..(SCREEN_X-window) {
                 match self.screen[y][x] {
                     Some(color) => print!("{}{char}{}", color.to_ansi(), ANSI_RESET),
+                    // _ => print!("{}{char}{}", Color::White.to_ansi(), ANSI_RESET),
                     _ => print!("  ")
                 };
             }
@@ -254,12 +257,12 @@ fn cube() {
         let mut screen = Screen::new(ZP, SOMETHING);
         
         screen.render_cubie(&cubie);
+        thread::sleep(Duration::from_millis(300));
+        Screen::move_cursor_up();
         screen.print_screen();
 
         angle += 0.1;
         // somet += 0.1;
-        thread::sleep(Duration::from_millis(300));
-        Screen::move_cursor_up();
     }
 }
 
