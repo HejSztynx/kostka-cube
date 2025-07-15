@@ -6,22 +6,33 @@ const X_INIT: f32 = 0.0;
 const Y_INIT: f32 = 0.0;
 const Z_INIT: f32 = 5.0;
 const ZP: f32 = 5.0;
-const SOMETHING: f32 = 10.0;
+const PROJECTION_SCALE: f32 = 10.0;
 
 const SCREEN_X: usize = 70;
 const SCREEN_Y: usize = 45;
 
 const ANSI_RESET: &str = "\x1b[0m";
 
+#[derive(Debug, Clone, Copy)]
+struct Point2D {
+    x: isize,
+    y: isize,
+}
 
 #[derive(Debug, Clone, Copy)]
-struct Position {
+struct Point3D {
     x: f32,
     y: f32,
     z: f32,
 }
 
-impl Position {
+struct Triangle (
+    Point2D,
+    Point2D,
+    Point2D,
+);
+
+impl Point3D {
     fn rotate_y(self, angle: f32) -> Self {
         let (sin, cos) = (angle.sin(), angle.cos());
         Self {
@@ -40,20 +51,13 @@ impl Position {
         }
     }
 
-    fn translate(self, offset: Position) -> Self {
+    fn translate(self, offset: Point3D) -> Self {
         Self {
             x: self.x + offset.x,
             y: self.y + offset.y,
             z: self.z + offset.z,
         }
     }
-}
-
-
-struct Cubie {
-    position: Position,
-    rotation_y: f32,
-    rotation_x: f32,
 }
 
 #[derive(Clone, Copy)]
@@ -84,7 +88,7 @@ impl Color {
 }
 
 struct Face {
-    corners: [Position; 4],
+    corners: [Point3D; 4],
     color: Color,
 }
 
@@ -94,35 +98,46 @@ impl Face {
     }
 }
 
+struct Cubie {
+    position: Point3D,
+    rotation_y: f32,
+    rotation_x: f32,
+}
+
 impl Cubie {
     fn new(position: (f32, f32, f32), rotation_y: f32, rotation_x: f32) -> Cubie {
         let (x, y, z) = position;
         Cubie {
-            position: Position {x, y, z},
+            position: Point3D {x, y, z},
             rotation_y,
             rotation_x
         }
     }
 
-    fn faces(&self) -> Vec<Face> {
+    fn initial_corners(&self) -> [Point3D; 8] {
         let h = CUBE_SIZE / 2.0;
-
-        let initial_corners = [
-            Position { x: h, y: h, z: -h },
-            Position { x: -h, y: h, z: -h },
-            Position { x: -h, y: h, z: h },
-            Position { x: h, y: h, z: h },
+        [
+            Point3D { x: h, y: h, z: -h },
+            Point3D { x: -h, y: h, z: -h },
+            Point3D { x: -h, y: h, z: h },
+            Point3D { x: h, y: h, z: h },
             
-            Position { x: h, y: -h, z: -h },
-            Position { x: -h, y: -h, z: -h },
-            Position { x: -h, y: -h, z: h },
-            Position { x: h, y: -h, z: h },
-        ];
+            Point3D { x: h, y: -h, z: -h },
+            Point3D { x: -h, y: -h, z: -h },
+            Point3D { x: -h, y: -h, z: h },
+            Point3D { x: h, y: -h, z: h },
+        ]
+    }
 
-        let corners: Vec<Position> = initial_corners
+    fn transformed_corners(&self) -> Vec<Point3D> {
+        self.initial_corners()
             .into_iter()
             .map(|p| p.rotate_y(self.rotation_y).rotate_x(self.rotation_x).translate(self.position))
-            .collect();
+            .collect()
+    }
+
+    fn faces(&self) -> Vec<Face> {
+        let corners: Vec<Point3D> = self.transformed_corners();
 
         vec![
             Face{corners: [corners[0], corners[1], corners[2], corners[3]], color: Color::White},
@@ -150,24 +165,67 @@ fn point_in_triangle(p: Point2D, a: Point2D, b: Point2D, c: Point2D) -> bool {
     a1 + a2 + a3 <= total + 1
 }
 
-#[derive(Debug, Clone, Copy)]
-struct Point2D {
-    x: isize,
-    y: isize,
-}
 
 struct Screen {
     screen: [[Option<Color>; SCREEN_X]; SCREEN_Y],
     zp: f32,
-    something: f32,
+    projection_scale: f32,
 }
 
 impl Screen {
-    fn new(zp: f32, something: f32) -> Screen {
+    fn new(zp: f32, projection_scale: f32) -> Screen {
         Screen {
             screen: [[None; SCREEN_X]; SCREEN_Y],
             zp,
-            something
+            projection_scale
+        }
+    }
+
+    fn project_corner(&self, p: Point3D) -> Point2D {
+        let multiplier = self.zp / p.z;
+        let xp = p.x * multiplier;
+        let yp = p.y * multiplier;
+
+        let x_proj = (xp * self.projection_scale) as isize + 30;
+        let y_proj = (yp * self.projection_scale) as isize + 22;
+
+        Point2D {x: x_proj, y: y_proj}
+    }
+
+    fn rasterize_triangle(&mut self, Triangle(a, b, c): Triangle, color: Color) {
+        let min_x = a.x.min(b.x.min(c.x)).max(0);
+        let max_x = a.x.max(b.x.max(c.x)).min(SCREEN_X as isize - 1);
+        let min_y = a.y.min(b.y.min(c.y)).max(0);
+        let max_y = a.y.max(b.y.max(c.y)).min(SCREEN_Y as isize - 1);
+
+        for y in min_y..=max_y {
+            for x in min_x..=max_x {
+                let p = Point2D {x, y};
+                if point_in_triangle(p, a, b, c) {
+                    self.screen[y as usize][x as usize] = Some(color);
+                }
+            }
+        }
+    }
+
+    fn render_face(&mut self, face: Face) {
+        let projected: Vec<Point2D> = face.corners
+            .iter()
+            .map(|&p| self.project_corner(p))
+            .collect();
+
+        let tris = [
+            Triangle(projected[0], projected[1], projected[2]),
+            Triangle(projected[0], projected[2], projected[3]),
+        ];
+
+        for tri in tris {
+            self.rasterize_triangle(tri, face.color);
+        }
+
+        // to remove after debug
+        for proj in projected {
+            self.screen[proj.y as usize][proj.x as usize] = Some(Color::Magenta);
         }
     }
 
@@ -176,47 +234,7 @@ impl Screen {
         faces.sort_by(|a, b| a.avg_z().partial_cmp(&b.avg_z()).unwrap());
         
         for face in faces.into_iter().rev() {
-            let corners = face.corners; 
-
-            let mut projected: [Point2D; 4] = [Point2D {x: 0, y: 0}; 4];
-            for (i, corner) in corners.iter().enumerate() {
-                let multiplier = self.zp / corner.z;
-                let xp = corner.x * multiplier;
-                let yp = corner.y * multiplier;
-
-                let x_proj = (xp * self.something) as isize + 30;
-                let y_proj = (yp * self.something) as isize + 22;
-
-                projected[i] = Point2D {x: x_proj, y: y_proj};
-            }
-
-            let tris = [
-                (projected[0], projected[1], projected[2]),
-                (projected[0], projected[2], projected[3]),
-            ];
-
-            for (a, b, c) in tris {
-                let min_x = a.x.min(b.x.min(c.x)).max(0);
-                let max_x = a.x.max(b.x.max(c.x)).min(SCREEN_X as isize - 1);
-                let min_y = a.y.min(b.y.min(c.y)).max(0);
-                let max_y = a.y.max(b.y.max(c.y)).min(SCREEN_Y as isize - 1);
-
-                for y in min_y..=max_y {
-                    for x in min_x..=max_x {
-                        let p = Point2D {x, y};
-                        if point_in_triangle(p, a, b, c) {
-                            self.screen[y as usize][x as usize] = Some(face.color);
-                        }
-                    }
-                }
-            }
-
-            for proj in projected {
-                let x_proj = proj.x;
-                let y_proj = proj.y;
-                self.screen[y_proj as usize][x_proj as usize] = Some(Color::Magenta);
-            }
-
+            self.render_face(face);
         }
     }
 
@@ -232,9 +250,10 @@ impl Screen {
             }
             println!();
         }
+        io::stdout().flush().unwrap();
     }
 
-    fn move_cursor_up() {
+    fn clear_screen() {
         print!("{esc}c", esc = 27 as char);
         io::stdout().flush().unwrap();
     }
@@ -245,15 +264,16 @@ fn cube() {
     let mut angle_x = 0.0;
     let mut angle_y = 0.0;
 
+    Screen::clear_screen();
     loop {
         let cubie = Cubie::new(position, angle_y, angle_x);
         
-        let mut screen = Screen::new(ZP, SOMETHING);
+        let mut screen = Screen::new(ZP, PROJECTION_SCALE);
         
         screen.render_cubie(&cubie);
-        thread::sleep(Duration::from_millis(100));
-        Screen::move_cursor_up();
         screen.print_screen();
+        thread::sleep(Duration::from_millis(100));
+        Screen::clear_screen();
 
         angle_y += 0.1;
         angle_x += 0.1;
