@@ -25,9 +25,39 @@ struct Position {
     z: f32,
 }
 
+impl Position {
+    fn rotate_y(self, angle: f32) -> Self {
+        let (sin, cos) = (angle.sin(), angle.cos());
+        Self {
+            x: self.x * cos + self.z * sin,
+            y: self.y,
+            z: -self.x * sin + self.z * cos,
+        }
+    }
+
+    fn rotate_x(self, angle: f32) -> Self {
+        let (sin, cos) = (angle.sin(), angle.cos());
+        Self {
+            x: self.x,
+            y: self.y * cos - self.z * sin,
+            z: self.y * sin + self.z * cos,
+        }
+    }
+
+    fn translate(self, offset: Position) -> Self {
+        Self {
+            x: self.x + offset.x,
+            y: self.y + offset.y,
+            z: self.z + offset.z,
+        }
+    }
+}
+
+
 struct Cubie {
     position: Position,
-    rotation: f32,
+    rotation_y: f32,
+    rotation_x: f32,
 }
 
 #[derive(Clone, Copy)]
@@ -69,50 +99,50 @@ impl Face {
 }
 
 impl Cubie {
-    fn new(position: (f32, f32, f32), rotation: f32) -> Cubie {
+    fn new(position: (f32, f32, f32), rotation_y: f32, rotation_x: f32) -> Cubie {
         let (x, y, z) = position;
         Cubie {
             position: Position {x, y, z},
-            rotation
+            rotation_y,
+            rotation_x
         }
     }
 
     fn faces(&self) -> Vec<Face> {
-        let half = CUBE_SIZE / 2.0;
-        let (x, y, z) = (self.position.x, self.position.y, self.position.z);
-        let y_top = y + half;
-        let y_bot = y - half;
+        let h = CUBE_SIZE / 2.0;
+        // let r = half * SQRT_2;
+        // let (x, y, z) = (self.position.x, self.position.y, -r);
+        // let y_top = y + half;
+        // let y_bot = y - half;
 
-        let r = half * SQRT_2;
-        let sin_r = self.rotation.sin() * r;
-        let cos_r = self.rotation.cos() * r;
-
-        let corners = [
-            Position{x: x + sin_r, y: y_top, z: z + cos_r},
-            Position{x: x + cos_r, y: y_top, z: z - sin_r},
-            Position{x: x - sin_r, y: y_top, z: z - cos_r},
-            Position{x: x - cos_r, y: y_top, z: z + sin_r},
-
-            Position{x: x + sin_r, y: y_bot, z: z + cos_r},
-            Position{x: x + cos_r, y: y_bot, z: z - sin_r},
-            Position{x: x - sin_r, y: y_bot, z: z - cos_r},
-            Position{x: x - cos_r, y: y_bot, z: z + sin_r},
+        let initial_corners = [
+            Position { x: h, y: h, z: -h },
+            Position { x: -h, y: h, z: -h },
+            Position { x: -h, y: h, z: h },
+            Position { x: h, y: h, z: h },
+            
+            Position { x: h, y: -h, z: -h },
+            Position { x: -h, y: -h, z: -h },
+            Position { x: -h, y: -h, z: h },
+            Position { x: h, y: -h, z: h },
         ];
 
-        // let perpendicular = [(sin_r, cos_r), (cos_r, -sin_r)];
-        // let mut corners = vec![];
-        // for yy in [y_top, y_bot] {
-        //     for perp in perpendicular {
-        //         for d in [1.0, -1.0] {
-        //             corners.push(Position{
-        //                 x: x + d * perp.0,
-        //                 y: yy,
-        //                 z: z + d * perp.1
-        //             });
-        //         }
-        //     }
-        // }
-        // println!("{}", self.rotation);
+        let corners: Vec<Position> = initial_corners
+            .into_iter()
+            .map(|p| p.rotate_y(self.rotation_y).rotate_x(self.rotation_x).translate(self.position))
+            .collect();
+
+        // let corners = [
+        //     Position{x: x * rot_y_cos + z * rot_y_sin, y: y_top, z: self.position.z + -x * rot_y_sin + z * rot_y_cos},
+        //     Position{x: x * -rot_y_sin + z * rot_y_cos, y: y_top, z: self.position.z + -x * rot_y_cos + z * -rot_y_sin},
+        //     Position{x: x * -rot_y_cos + z * -rot_y_sin, y: y_top, z: self.position.z + -x * -rot_y_sin + z * -rot_y_cos},
+        //     Position{x: x * rot_y_sin + z * -rot_y_cos, y: y_top, z: self.position.z + -x * -rot_y_cos + z * rot_y_sin},
+            
+        //     Position{x: x * rot_y_cos + z * rot_y_sin, y: y_bot, z: self.position.z + -x * rot_y_sin + z * rot_y_cos},
+        //     Position{x: x * -rot_y_sin + z * rot_y_cos, y: y_bot, z: self.position.z + -x * rot_y_cos + z * -rot_y_sin},
+        //     Position{x: x * -rot_y_cos + z * -rot_y_sin, y: y_bot, z: self.position.z + -x * -rot_y_sin + z * -rot_y_cos},
+        //     Position{x: x * rot_y_sin + z * -rot_y_cos, y: y_bot, z: self.position.z + -x * -rot_y_cos + z * rot_y_sin},
+        // ];
 
         vec![
             Face{corners: [corners[0], corners[1], corners[2], corners[3]], color: Color::White},
@@ -170,7 +200,7 @@ impl Screen {
         // }
         // println!("--------------");
         
-        for face in faces.into_iter().take(3).rev() {
+        for face in faces.into_iter().rev() {
             // self.print_screen();
             // std::thread::sleep(Duration::from_millis(1000));
 
@@ -184,8 +214,9 @@ impl Screen {
                 let xp = corner.x * multiplier;
                 let yp = corner.y * multiplier;
 
+                // println!("{} : {}", xp, yp);
                 let x_proj = (xp * self.something) as isize + 30;
-                let y_proj = (yp * self.something) as isize + 15;
+                let y_proj = (yp * self.something) as isize + 22;
 
                 // println!("{} : {}", x_proj, y_proj);
 
@@ -247,21 +278,23 @@ impl Screen {
 
 fn cube() {
     let position: (f32, f32, f32) = (X_INIT, Y_INIT, Z_INIT);
-    let mut angle = 0.0;
+    let mut angle_x = 0.0;
+    let mut angle_y = 0.0;
 
     // let mut somet = 3.0;
     loop {
         // Screen::clear_screen();
-        let cubie = Cubie::new(position, angle);
+        let cubie = Cubie::new(position, angle_y, angle_x);
         
         let mut screen = Screen::new(ZP, SOMETHING);
         
         screen.render_cubie(&cubie);
-        thread::sleep(Duration::from_millis(300));
+        thread::sleep(Duration::from_millis(100));
         Screen::move_cursor_up();
         screen.print_screen();
 
-        angle += 0.1;
+        angle_y += 0.1;
+        angle_x += 0.1;
         // somet += 0.1;
     }
 }
