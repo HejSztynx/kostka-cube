@@ -2,7 +2,7 @@ use super::geometry::Point3D;
 
 const CUBE_SIZE: f32 = 2.0;
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Color {
     White,
     Yellow,
