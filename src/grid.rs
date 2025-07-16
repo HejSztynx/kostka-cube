@@ -3,7 +3,12 @@ use super::cube::Color;
 const PRINT_CHAR: &str = "██";
 const ANSI_RESET: &str = "\x1b[0m";
 
-#[derive(Debug)]
+pub enum MoveDirection {
+    Clockwise,
+    CounterClockwise,
+}
+
+#[derive(Debug, Clone, Copy)]
 pub enum GridSide {
     TOP,
     FRONT,
@@ -13,9 +18,9 @@ pub enum GridSide {
     BACK,
 }
 
-impl From<&GridSide> for usize {
-    fn from(side: &GridSide) -> Self {
-        match side {
+impl GridSide {
+    fn idx(&self) -> usize {
+        match self {
             GridSide::TOP => 0,
             GridSide::LEFT => 1,
             GridSide::FRONT => 2,
@@ -33,7 +38,7 @@ struct NeighborSlice {
 
 impl NeighborSlice {
     fn read_from(&self, grid: &Grid) -> [Color; 3] {
-        let face = &grid.faces[usize::from(&self.side)];
+        let face = &grid.faces[self.side.idx()];
         match self.slice_type {
             SliceType::TOP => {
                 [
@@ -67,7 +72,7 @@ impl NeighborSlice {
     }
 
     fn write_to(&self, grid: &mut Grid, colors: [Color; 3]) {
-        let face = &mut grid.faces[usize::from(&self.side)];
+        let face = &mut grid.faces[self.side.idx()];
         match self.slice_type {
             SliceType::TOP => {
                 face.grid[0][0] = colors[0];
@@ -100,11 +105,6 @@ enum SliceType {
     RIGHT,
 }
 
-pub enum MoveDirection {
-    Clockwise,
-    CounterClockwise,
-}
-
 pub struct Face {
     grid: [[Color; 3]; 3],
 }
@@ -112,18 +112,8 @@ pub struct Face {
 impl Face {
     pub fn new(color: Color) -> Face {
         Face {
-            // grid: [
-            //     [Color::Blue, Color::Blue, Color::Blue],
-            //     [Color::Blue, Color::Green, Color::Red],
-            //     [Color::Yellow, Color::White, Color::Orange],
-            // ]
-
             grid: [[color; 3]; 3],
         }
-    }
-
-    pub fn new_custom(grid: [[Color; 3]; 3]) -> Face {
-        Face { grid }
     }
 
     pub fn print(&self) {
@@ -180,7 +170,6 @@ impl Face {
         self.grid[1][0] = tmp;
     }
 }
-
 
 pub struct Grid {
     faces: [Face; 6],
@@ -241,7 +230,7 @@ impl Grid {
     }
 
     pub fn move_face(&mut self, side: GridSide, direction: MoveDirection) {
-        let idx = usize::from(&side);
+        let idx = side.idx();
         self.faces[idx].rotate(&direction);
         let neighbors = self.get_neighbors(side);
         let mut buffers: Vec<[Color; 3]> = neighbors.iter()
@@ -307,7 +296,7 @@ mod tests {
     use Color::*;
 
     fn assert_whole_color(grid: &Grid, side: GridSide, color: Color) -> bool {
-        let face = &grid.faces[usize::from(&side)];
+        let face = &grid.faces[side.idx()];
         for row in face.grid {
             for c in row {
                 if c != color {
@@ -319,22 +308,22 @@ mod tests {
     }
 
     fn assert_right_color(grid: &Grid, side: GridSide, color: Color) -> bool {
-        let face_grid = &grid.faces[usize::from(&side)].grid;
+        let face_grid = &grid.faces[side.idx()].grid;
         face_grid[0][2] == color && face_grid[1][2] == color && face_grid[2][2] == color
     }
 
     fn assert_left_color(grid: &Grid, side: GridSide, color: Color) -> bool {
-        let face_grid = &grid.faces[usize::from(&side)].grid;
+        let face_grid = &grid.faces[side.idx()].grid;
         face_grid[0][0] == color && face_grid[1][0] == color && face_grid[2][0] == color
     }
 
     fn assert_top_color(grid: &Grid, side: GridSide, color: Color) -> bool {
-        let face_grid = &grid.faces[usize::from(&side)].grid;
+        let face_grid = &grid.faces[side.idx()].grid;
         face_grid[0][0] == color && face_grid[0][1] == color && face_grid[0][2] == color
     }
 
     fn assert_bottom_color(grid: &Grid, side: GridSide, color: Color) -> bool {
-        let face_grid = &grid.faces[usize::from(&side)].grid;
+        let face_grid = &grid.faces[side.idx()].grid;
         face_grid[2][0] == color && face_grid[2][1] == color && face_grid[2][2] == color
     }
 
@@ -362,40 +351,44 @@ mod tests {
     }
 
     fn create_mixed_grid() -> Grid {
+        fn new_custom_face(grid: [[Color; 3]; 3]) -> Face {
+            Face { grid }
+        }
+
         Grid {
             faces: [
                 // TOP
-                Face::new_custom([
+                new_custom_face([
                     [Red, White, Green],
                     [Green, White, Blue],
                     [White, Blue, Blue],
                 ]),
                 // LEFT
-                Face::new_custom([
+                new_custom_face([
                     [Blue, Orange, Red],
                     [Yellow, Orange, Yellow],
                     [Green, Green, Orange],
                 ]),
                 // FRONT
-                Face::new_custom([
+                new_custom_face([
                     [Blue, Red, Orange],
                     [Green, Green, Orange],
                     [Yellow, Yellow, Green],
                 ]),
                 // RIGHT
-                Face::new_custom([
+                new_custom_face([
                     [White, Orange, Orange],
                     [Yellow, Red, Orange],
                     [Red, Red, Green],
                 ]),
                 // BACK
-                Face::new_custom([
+                new_custom_face([
                     [Yellow, Green, Yellow],
                     [White, Blue, Red],
                     [White, White, White],
                 ]),
                 // BOTTOM
-                Face::new_custom([
+                new_custom_face([
                     [Blue, Blue, Yellow],
                     [Red, Yellow, White],
                     [Orange, Blue, Red],

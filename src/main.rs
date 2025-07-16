@@ -1,8 +1,9 @@
 use std::{thread, time::Duration};
 
 use kostka::cube::Cubie;
+use kostka::scramble::scramble;
 use kostka::screen::Screen;
-use kostka::grid::*;
+use kostka::{grid::*, scramble};
 
 const X_INIT: f32 = 0.0;
 const Y_INIT: f32 = 0.0;
@@ -41,27 +42,6 @@ fn grid() {
     let mut grid = Grid::new();
 
     grid.print();
-    // grid.move_face(GridSide::FRONT, MoveDirection::Clockwise);
-    // grid.print();
-    grid.move_face(GridSide::RIGHT, MoveDirection::Clockwise);
+    scramble(&mut grid);
     grid.print();
-    grid.move_face(GridSide::RIGHT, MoveDirection::CounterClockwise);
-    grid.print();
-    // grid.move_face(GridSide::FRONT, MoveDirection::Clockwise);
-    // grid.print();
-    
-
-    // let mut face = Face::new();
-    // face.print();
-    
-    // for _ in 0..5 {
-        // println!("rotating clockwise...");
-        // face.rotate_clockwise();
-        // face.print();
-    // }
-    // for _ in 0..5 {
-        // println!("rotating counter-clockwise...");
-        // face.rotate_counter_clockwise();
-        // face.print();
-    // }
 }
