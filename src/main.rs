@@ -1,9 +1,8 @@
 use std::{thread, time::Duration};
 
 use kostka::cube::Cubie;
-use kostka::scramble::scramble;
+use kostka::game::game;
 use kostka::screen::Screen;
-use kostka::{grid::*, scramble};
 
 const X_INIT: f32 = 0.0;
 const Y_INIT: f32 = 0.0;
@@ -35,13 +34,5 @@ fn cube() {
 fn main() {
     // cube();
 
-    grid();
-}
-
-fn grid() {
-    let mut grid = Grid::new();
-
-    grid.print();
-    scramble(&mut grid);
-    grid.print();
+    game();
 }

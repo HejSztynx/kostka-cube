@@ -6,6 +6,7 @@ const ANSI_RESET: &str = "\x1b[0m";
 pub enum MoveDirection {
     Clockwise,
     CounterClockwise,
+    Double,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -135,6 +136,10 @@ impl Face {
         match direction {
             MoveDirection::Clockwise => self.rotate_clockwise(),
             MoveDirection::CounterClockwise => self.rotate_counter_clockwise(),
+            MoveDirection::Double => {
+                self.rotate_clockwise();
+                self.rotate_clockwise();
+            }
         }
     }
 
@@ -189,6 +194,29 @@ impl Grid {
         }
     }
 
+    pub fn apply_move(&mut self, mv: &str) -> Result<(), String> {
+        let (side_char, suffix) = mv.split_at(1);
+        let side = match side_char {
+            "R" => GridSide::RIGHT,
+            "L" => GridSide::LEFT,
+            "U" => GridSide::TOP,
+            "D" => GridSide::BOTTOM,
+            "F" => GridSide::FRONT,
+            "B" => GridSide::BACK,
+            _ => return Err(format!("Incorrect move '{}'", mv)),
+        };
+        let direction = match suffix {
+            "" => Ok(MoveDirection::Clockwise),
+            "'" => Ok(MoveDirection::CounterClockwise),
+            "2" => Ok(MoveDirection::Double),
+            _ => Err(format!("Incorrect move '{}'", mv)),
+        }?;
+
+        self.move_face(side, direction);
+
+        Ok(())
+    }
+
     pub fn print(&self) {
         fn print_blank_row() {
             for _ in 0..3 {
@@ -226,6 +254,7 @@ impl Grid {
         match direction {
             MoveDirection::Clockwise => buffers.rotate_right(1),
             MoveDirection::CounterClockwise => buffers.rotate_left(1),
+            MoveDirection::Double => buffers.rotate_right(2),
         }
     }
 

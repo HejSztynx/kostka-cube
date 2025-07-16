@@ -64,10 +64,16 @@ fn generate_scramble(length: usize) -> Vec<&'static str> {
     scramble
 }
 
-fn apply_scramble(grid: &mut Grid, moves: Vec<&str>) {
+fn print_scramble(moves: &Vec<&str>) {
     println!("Scramble:");
-    for mv in moves {
+    for &mv in moves {
         print!("{} ", mv);
+    }
+    println!();
+}
+
+fn apply_scramble(grid: &mut Grid, moves: Vec<&str>) {
+    for mv in moves {
         let (side_char, suffix) = mv.split_at(1);
         let side = match side_char {
             "R" => GridSide::RIGHT,
@@ -91,10 +97,10 @@ fn apply_scramble(grid: &mut Grid, moves: Vec<&str>) {
 
         grid.move_face(side, direction);
     }
-    println!();
 }
 
 pub fn scramble(grid: &mut Grid) {
     let scramble = generate_scramble(20);
+    // print_scramble(&scramble);
     apply_scramble(grid, scramble);
 }
