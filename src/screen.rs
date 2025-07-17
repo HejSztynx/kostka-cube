@@ -55,49 +55,43 @@ impl Screen {
         }
     }
 
-    fn render_face(&mut self, face: Face) {
-        // println!("\n-------------\nFACE - {:?}", face.color);
-
-        let projected_corners: Vec<Point2D> = face.corners
-            .iter()
-            .map(|&p| self.project_point(p))
-            .collect();
-
-        // println!("Corners: ");
-        // for corner in face.corners.iter() {
-            // println!("{:?}", corner);
-        // }
-        // println!("Markers: ");
-        // for marker in face.markers.iter() {
-            // println!("{:?}", marker);
-        // }
-
+    fn render_face(&mut self, face: &Face) {
         let projected_markers: Vec<Point2D> = face.markers
             .iter()
             .map(|&p| self.project_point(p))
             .collect();
 
-        let tris = [
-            Triangle(projected_corners[0], projected_corners[1], projected_corners[2]),
-            Triangle(projected_corners[0], projected_corners[2], projected_corners[3]),
-        ];
-
-        for tri in tris {
-            self.rasterize_triangle(tri, face.color);
+        for row in 0..3 {
+            for col in 0..3 {
+                let tris = [
+                    Triangle(projected_markers.get(row * 4 + col).unwrap().clone(), 
+                        projected_markers.get(row * 4 + col + 1).unwrap().clone(), 
+                        projected_markers.get((row + 1) * 4 + col + 1).unwrap().clone()
+                    ),
+                    Triangle(projected_markers.get(row * 4 + col).unwrap().clone(), 
+                        projected_markers.get((row + 1) * 4 + col + 1).unwrap().clone(),
+                        projected_markers.get((row + 1) * 4 + col).unwrap().clone()
+                    ),
+                ];
+                let color = face.grid_face.grid[row][col];
+                for tri in tris {
+                    self.rasterize_triangle(tri, color);
+                }
+            }
         }
+
 
         // to remove after debug
-        for proj in projected_markers {
-            self.screen[proj.y as usize][proj.x as usize] = Some(Color::Magenta);
-        }
+        // for proj in projected_markers {
+        //     self.screen[proj.y as usize][proj.x as usize] = Some(Color::Magenta);
+        // }
     }
 
-    pub fn render_cube(&mut self, cubie: &Cube) {
-        let mut faces = cubie.faces();
-        faces.sort_by(|a, b| a.avg_z().partial_cmp(&b.avg_z()).unwrap());
+    pub fn render_cube(&mut self, cubie: &mut Cube) {
+        let faces = cubie.get_visible_faces();
         
         for face in faces.into_iter().take(3).rev() {
-            self.render_face(face);
+            self.render_face(&face);
         }
     }
 

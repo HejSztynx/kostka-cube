@@ -106,8 +106,9 @@ enum SliceType {
     RIGHT,
 }
 
+#[derive(Clone, Copy)]
 pub struct GridFace {
-    grid: [[Color; 3]; 3],
+    pub grid: [[Color; 3]; 3],
 }
 
 impl GridFace {
@@ -177,7 +178,7 @@ impl GridFace {
 }
 
 pub struct Grid {
-    faces: [GridFace; 6],
+    pub faces: [GridFace; 6],
 }
 
 impl Grid {

@@ -36,21 +36,11 @@ impl Color {
 pub struct Face {
     pub corners: [Point3D; 4],
     pub markers: Vec<Point3D>,
-    // pub grid_face: GridFace,
-    pub color: Color,
+    pub grid_face: GridFace,
 }
 
 impl Face {
-    fn new(corners: [Point3D; 4], color: Color) -> Face {
-        // match color {
-        //     Color::White => {
-        //         // println!("siema");
-        //     },
-        //     Color::Yellow => {
-        //         // println!("siema");
-        //     },
-        //     _ => {}
-        // };
+    fn new(corners: [Point3D; 4], grid_face: GridFace) -> Face {
         let mut markers = Vec::with_capacity(16);
         let diff = corners[3].subtract(&corners[0]).scalar_multiply(1.0 / 3.0);
         for i in 0..4 {
@@ -59,7 +49,7 @@ impl Face {
                 corners[1].add(&diff.scalar_multiply(i as f32)));
         }
 
-        Face { corners, markers, color }
+        Face { corners, markers, grid_face }
     }
 
     fn create_markers(markers: &mut Vec<Point3D>, v1: Point3D, v2: Point3D) {
@@ -92,11 +82,20 @@ impl Cube {
         }
     }
 
-    pub fn apply_grid(grid: &Grid) {
+    pub fn apply_grid(&mut self, grid: &Grid) {
+        let corners: Vec<Point3D> = self.transformed_corners();
 
+        self.faces = vec![
+            Face::new([corners[2], corners[3], corners[0], corners[1]], grid.faces[0].clone()),
+            Face::new([corners[2], corners[1], corners[5], corners[6]], grid.faces[1].clone()),
+            Face::new([corners[1], corners[0], corners[4], corners[5]], grid.faces[2].clone()),
+            Face::new([corners[0], corners[3], corners[7], corners[4]], grid.faces[3].clone()),
+            Face::new([corners[3], corners[2], corners[6], corners[7]], grid.faces[4].clone()),
+            Face::new([corners[5], corners[4], corners[7], corners[6]], grid.faces[5].clone()),
+        ];
     }
 
-    pub fn initial_corners(&self) -> [Point3D; 8] {
+    fn initial_corners(&self) -> [Point3D; 8] {
         let h = CUBE_SIZE / 2.0;
         [
             Point3D { x: h, y: h, z: -h },
@@ -111,23 +110,15 @@ impl Cube {
         ]
     }
 
-    pub fn transformed_corners(&self) -> Vec<Point3D> {
+    fn transformed_corners(&self) -> Vec<Point3D> {
         self.initial_corners()
             .into_iter()
             .map(|p| p.rotate_y(self.rotation_y).rotate_x(self.rotation_x).translate(self.position))
             .collect()
     }
 
-    pub fn faces(&self) -> Vec<Face> {
-        let corners: Vec<Point3D> = self.transformed_corners();
-
-        vec![
-            Face::new([corners[2], corners[3], corners[0], corners[1]], Color::White),
-            Face::new([corners[2], corners[1], corners[5], corners[6]], Color::Green),
-            Face::new([corners[1], corners[0], corners[4], corners[5]], Color::Red),
-            Face::new([corners[0], corners[3], corners[7], corners[4]], Color::Blue),
-            Face::new([corners[3], corners[2], corners[6], corners[7]], Color::Orange),
-            Face::new([corners[5], corners[4], corners[7], corners[6]], Color::Yellow),
-        ]
+    pub fn get_visible_faces(&mut self) -> &Vec<Face> {
+        self.faces.sort_by(|a, b| a.avg_z().partial_cmp(&b.avg_z()).unwrap());
+        &self.faces
     }
 }
