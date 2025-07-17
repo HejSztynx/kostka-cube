@@ -1,7 +1,7 @@
 use std::io::{self, Write};
 
 use super::geometry::{Point2D, Point3D, Triangle};
-use super::cube::{Color, Cubie, Face};
+use super::cube::{Color, Cube, Face};
 
 const SCREEN_X: usize = 70;
 const SCREEN_Y: usize = 45;
@@ -27,7 +27,7 @@ impl Screen {
         }
     }
 
-    fn project_corner(&self, p: Point3D) -> Point2D {
+    fn project_point(&self, p: Point3D) -> Point2D {
         let multiplier = self.zp / p.z;
         let xp = p.x * multiplier;
         let yp = p.y * multiplier;
@@ -56,14 +56,30 @@ impl Screen {
     }
 
     fn render_face(&mut self, face: Face) {
-        let projected: Vec<Point2D> = face.corners
+        // println!("\n-------------\nFACE - {:?}", face.color);
+
+        let projected_corners: Vec<Point2D> = face.corners
             .iter()
-            .map(|&p| self.project_corner(p))
+            .map(|&p| self.project_point(p))
+            .collect();
+
+        // println!("Corners: ");
+        // for corner in face.corners.iter() {
+            // println!("{:?}", corner);
+        // }
+        // println!("Markers: ");
+        // for marker in face.markers.iter() {
+            // println!("{:?}", marker);
+        // }
+
+        let projected_markers: Vec<Point2D> = face.markers
+            .iter()
+            .map(|&p| self.project_point(p))
             .collect();
 
         let tris = [
-            Triangle(projected[0], projected[1], projected[2]),
-            Triangle(projected[0], projected[2], projected[3]),
+            Triangle(projected_corners[0], projected_corners[1], projected_corners[2]),
+            Triangle(projected_corners[0], projected_corners[2], projected_corners[3]),
         ];
 
         for tri in tris {
@@ -71,16 +87,16 @@ impl Screen {
         }
 
         // to remove after debug
-        for proj in projected {
+        for proj in projected_markers {
             self.screen[proj.y as usize][proj.x as usize] = Some(Color::Magenta);
         }
     }
 
-    pub fn render_cubie(&mut self, cubie: &Cubie) {
+    pub fn render_cube(&mut self, cubie: &Cube) {
         let mut faces = cubie.faces();
         faces.sort_by(|a, b| a.avg_z().partial_cmp(&b.avg_z()).unwrap());
         
-        for face in faces.into_iter().rev() {
+        for face in faces.into_iter().take(3).rev() {
             self.render_face(face);
         }
     }

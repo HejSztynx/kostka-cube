@@ -106,13 +106,13 @@ enum SliceType {
     RIGHT,
 }
 
-pub struct Face {
+pub struct GridFace {
     grid: [[Color; 3]; 3],
 }
 
-impl Face {
-    pub fn new(color: Color) -> Face {
-        Face {
+impl GridFace {
+    pub fn new(color: Color) -> GridFace {
+        GridFace {
             grid: [[color; 3]; 3],
         }
     }
@@ -177,19 +177,19 @@ impl Face {
 }
 
 pub struct Grid {
-    faces: [Face; 6],
+    faces: [GridFace; 6],
 }
 
 impl Grid {
     pub fn new() -> Grid {
         Grid {
             faces: [
-                Face::new(Color::White),
-                Face::new(Color::Orange),
-                Face::new(Color::Green),
-                Face::new(Color::Red),
-                Face::new(Color::Blue),
-                Face::new(Color::Yellow),
+                GridFace::new(Color::White),
+                GridFace::new(Color::Orange),
+                GridFace::new(Color::Green),
+                GridFace::new(Color::Red),
+                GridFace::new(Color::Blue),
+                GridFace::new(Color::Yellow),
             ]
         }
     }
@@ -369,19 +369,19 @@ mod tests {
     fn create_solved_grid() -> Grid {
         Grid {
             faces: [
-                Face::new(White),   // TOP
-                Face::new(Orange),  // LEFT
-                Face::new(Green),   // FRONT
-                Face::new(Red),     // RIGHT
-                Face::new(Blue),    // BACK
-                Face::new(Yellow),  // BOTTOM
+                GridFace::new(White),   // TOP
+                GridFace::new(Orange),  // LEFT
+                GridFace::new(Green),   // FRONT
+                GridFace::new(Red),     // RIGHT
+                GridFace::new(Blue),    // BACK
+                GridFace::new(Yellow),  // BOTTOM
             ],
         }
     }
 
     fn create_mixed_grid() -> Grid {
-        fn new_custom_face(grid: [[Color; 3]; 3]) -> Face {
-            Face { grid }
+        fn new_custom_face(grid: [[Color; 3]; 3]) -> GridFace {
+            GridFace { grid }
         }
 
         Grid {

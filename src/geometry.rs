@@ -11,6 +11,32 @@ pub struct Point3D {
     pub z: f32,
 }
 
+impl Point3D {
+    pub fn add(&self, other: &Point3D) -> Point3D {
+        Point3D { 
+            x: self.x + other.x,
+            y: self.y + other.y,
+            z: self.z + other.z, 
+        }
+    }
+
+    pub fn subtract(&self, other: &Point3D) -> Point3D {
+        Point3D { 
+            x: self.x - other.x,
+            y: self.y - other.y,
+            z: self.z - other.z, 
+        }
+    }
+
+    pub fn scalar_multiply(&self, scalar: f32) -> Point3D {
+        Point3D { 
+            x: scalar * self.x,
+            y: scalar * self.y,
+            z: scalar * self.z, 
+        }
+    }
+}
+
 pub struct Triangle (
     pub Point2D,
     pub Point2D,
