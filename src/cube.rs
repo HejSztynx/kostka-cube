@@ -1,7 +1,4 @@
-use std::pin::Pin;
-
 use crate::grid::{Grid, GridFace};
-
 use super::geometry::Point3D;
 
 const CUBE_SIZE: f32 = 2.0;

@@ -79,12 +79,6 @@ impl Screen {
                 }
             }
         }
-
-
-        // to remove after debug
-        // for proj in projected_markers {
-        //     self.screen[proj.y as usize][proj.x as usize] = Some(Color::Magenta);
-        // }
     }
 
     pub fn render_cube(&mut self, cubie: &mut Cube) {
@@ -108,7 +102,13 @@ impl Screen {
         io::stdout().flush().unwrap();
     }
 
-    pub fn clear_screen() {
+    pub fn clear_screen(&mut self) {
+        for row in self.screen.iter_mut() {
+            for cell in row.iter_mut() {
+                *cell = None;
+            }
+        }
+
         print!("{esc}c", esc = 27 as char);
         io::stdout().flush().unwrap();
     }

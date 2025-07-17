@@ -3,54 +3,51 @@ use crate::grid::{Grid, GridSide, MoveDirection};
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(PartialEq, Eq)]
 enum Axis {
     X,
     Y,
     Z,
 }
 
-#[derive(Clone, Copy, Debug)]
 struct Move {
-    notation: &'static str,
+    mv: &'static str,
     axis: Axis,
 }
 
-const MOVES: &[&str] = &[
-    "R",
-    "R'",
-    "R2",
-    "L",
-    "L'",
-    "L2",
+const MOVES: &[Move] = &[
+    Move { mv: "R", axis: Axis::X },
+    Move { mv: "R'", axis: Axis::X },
+    Move { mv: "R2", axis: Axis::X },
+    Move { mv: "L", axis: Axis::X },
+    Move { mv: "L'", axis: Axis::X },
+    Move { mv: "L2", axis: Axis::X },
 
-    "U",
-    "U'",
-    "U2",
-    "D",
-    "D'",
-    "D2",
+    Move { mv: "U", axis: Axis::Y },
+    Move { mv: "U'", axis: Axis::Y },
+    Move { mv: "U2", axis: Axis::Y },
+    Move { mv: "D", axis: Axis::Y },
+    Move { mv: "D'", axis: Axis::Y },
+    Move { mv: "D2", axis: Axis::Y },
 
-    "F",
-    "F'",
-    "F2",
-    "B",
-    "B'",
-    "B2",
+    Move { mv: "F", axis: Axis::Z },
+    Move { mv: "F'", axis: Axis::Z },
+    Move { mv: "F2", axis: Axis::Z },
+    Move { mv: "B", axis: Axis::Z },
+    Move { mv: "B'", axis: Axis::Z },
+    Move { mv: "B2", axis: Axis::Z },
 ];
 
-fn generate_scramble(length: usize) -> Vec<&'static str> {
+fn generate_scramble(length: usize) -> Vec<&'static Move> {
     let mut rng = thread_rng();
     let mut scramble = Vec::with_capacity(length);
 
-    let mut last_move: Option<&str> = None;
+    let mut last_move: Option<&Move> = None;
     for _ in 0..length {
-        let choices: Vec<&str> = MOVES.iter()
-            .copied()
+        let choices: Vec<&Move> = MOVES.iter()
             .filter(|m| {
-                // avoid same axis immediately
                 match last_move {
-                    Some(prev) => prev[0..1] != m[0..1],
+                    Some(prev) => prev.axis != m.axis,
                     None => true,
                 }
             })
@@ -64,17 +61,17 @@ fn generate_scramble(length: usize) -> Vec<&'static str> {
     scramble
 }
 
-fn print_scramble(moves: &Vec<&str>) {
+fn print_scramble(moves: &Vec<&Move>) {
     println!("Scramble:");
     for &mv in moves {
-        print!("{} ", mv);
+        print!("{} ", mv.mv);
     }
     println!();
 }
 
-fn apply_scramble(grid: &mut Grid, moves: Vec<&str>) {
+fn apply_scramble(grid: &mut Grid, moves: Vec<&Move>) {
     for mv in moves {
-        let (side_char, suffix) = mv.split_at(1);
+        let (side_char, suffix) = mv.mv.split_at(1);
         let side = match side_char {
             "R" => GridSide::RIGHT,
             "L" => GridSide::LEFT,
@@ -101,6 +98,6 @@ fn apply_scramble(grid: &mut Grid, moves: Vec<&str>) {
 
 pub fn scramble(grid: &mut Grid) {
     let scramble = generate_scramble(20);
-    // print_scramble(&scramble);
+    print_scramble(&scramble);
     apply_scramble(grid, scramble);
 }
