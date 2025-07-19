@@ -131,43 +131,83 @@ impl Cube {
                     &self.faces[5],
                     &self.faces[2],
                 ],
+                idx_1: (13, 1),
+                idx_2: (13, 1),
+                idx_3: (2, 14),
+                idx_4: (2, 14),
+                flip: false,
                 face_1: &self.faces[1],
                 face_2: &self.faces[3],
             },
-            _ => panic!(),
+            Axis::Y => CubeSliceBuilder {
+                split_faces: [
+                    &self.faces[4],
+                    &self.faces[1],
+                    &self.faces[2],
+                    &self.faces[3],
+                ],
+                idx_1: (4, 7),
+                idx_2: (4, 7),
+                idx_3: (11, 8),
+                idx_4: (11, 8),
+                flip: true,
+                face_1: &self.faces[0],
+                face_2: &self.faces[5],
+            },
+            Axis::Z => CubeSliceBuilder {
+                split_faces: [
+                    &self.faces[0],
+                    &self.faces[1],
+                    &self.faces[5],
+                    &self.faces[3],
+                ],
+                idx_1: (11, 8),
+                idx_2: (4, 7),
+                idx_3: (4, 7),
+                idx_4: (11, 8),
+                flip: false,
+                face_1: &self.faces[2],
+                face_2: &self.faces[4],
+            },
         };
+
+        let mut last_corners = [
+                builder.split_faces[0].markers.get(builder.idx_3.0).unwrap().clone(),
+                builder.split_faces[0].markers.get(builder.idx_3.1).unwrap().clone(),
+                builder.split_faces[2].markers.get(builder.idx_4.0).unwrap().clone(),
+                builder.split_faces[2].markers.get(builder.idx_4.1).unwrap().clone(),
+            ];
+
+        if builder.flip {
+            last_corners.rotate_right(2);
+        }
 
         [
             CubeSlice::new(
                 builder.face_1.clone(),
                 Face::new([
-                        builder.split_faces[0].markers.get(13).unwrap().clone(),
-                        builder.split_faces[0].markers.get(1).unwrap().clone(),
-                        builder.split_faces[2].markers.get(13).unwrap().clone(),
-                        builder.split_faces[2].markers.get(1).unwrap().clone(),
+                        builder.split_faces[0].markers.get(builder.idx_1.0).unwrap().clone(),
+                        builder.split_faces[0].markers.get(builder.idx_1.1).unwrap().clone(),
+                        builder.split_faces[2].markers.get(builder.idx_2.0).unwrap().clone(),
+                        builder.split_faces[2].markers.get(builder.idx_2.1).unwrap().clone(),
                     ], GridFace::empty())
                 ),
             CubeSlice::new(
                 Face::new([
-                    builder.split_faces[0].markers.get(1).unwrap().clone(),
-                    builder.split_faces[0].markers.get(13).unwrap().clone(),
-                    builder.split_faces[2].markers.get(1).unwrap().clone(),
-                    builder.split_faces[2].markers.get(13).unwrap().clone(),
+                    builder.split_faces[0].markers.get(builder.idx_1.1).unwrap().clone(),
+                    builder.split_faces[0].markers.get(builder.idx_1.0).unwrap().clone(),
+                    builder.split_faces[2].markers.get(builder.idx_2.1).unwrap().clone(),
+                    builder.split_faces[2].markers.get(builder.idx_2.0).unwrap().clone(),
                     ], GridFace::empty()),
                 Face::new([
-                        builder.split_faces[0].markers.get(14).unwrap().clone(),
-                        builder.split_faces[0].markers.get(2).unwrap().clone(),
-                        builder.split_faces[2].markers.get(14).unwrap().clone(),
-                        builder.split_faces[2].markers.get(2).unwrap().clone(),
+                        builder.split_faces[0].markers.get(builder.idx_3.1).unwrap().clone(),
+                        builder.split_faces[0].markers.get(builder.idx_3.0).unwrap().clone(),
+                        builder.split_faces[2].markers.get(builder.idx_4.1).unwrap().clone(),
+                        builder.split_faces[2].markers.get(builder.idx_4.0).unwrap().clone(),
                     ], GridFace::empty())
                 ),
             CubeSlice::new(
-                Face::new([
-                    builder.split_faces[0].markers.get(2).unwrap().clone(),
-                    builder.split_faces[0].markers.get(14).unwrap().clone(),
-                    builder.split_faces[2].markers.get(2).unwrap().clone(),
-                    builder.split_faces[2].markers.get(14).unwrap().clone(),
-                    ], GridFace::empty()),
+                Face::new(last_corners, GridFace::empty()),
                 builder.face_2.clone()
                 ),
         ]
@@ -193,6 +233,11 @@ impl Renderable for Cube {
 
 struct CubeSliceBuilder<'a> {
     split_faces: [&'a Face; 4],
+    idx_1: (usize, usize),
+    idx_2: (usize, usize),
+    idx_3: (usize, usize),
+    idx_4: (usize, usize),
+    flip: bool,
     face_1: &'a Face,
     face_2: &'a Face,
 }
