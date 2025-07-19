@@ -122,7 +122,7 @@ impl Cube {
             .collect()
     }
 
-    pub fn create_cube_slices(&self, axis: Axis) -> [CubeSlice; 3] {
+    pub fn create_cube_slices(&self, grid: &Grid, axis: Axis) -> [CubeSlice; 3] {
         let builder: CubeSliceBuilder = match axis {
             Axis::X => CubeSliceBuilder {
                 cube: &self,
@@ -134,9 +134,9 @@ impl Cube {
                 // ],
                 split_faces: [
                     GridSide::TOP, // top
-                    GridSide::BACK, // back
-                    GridSide::BOTTOM, // bottom
                     GridSide::FRONT, // front
+                    GridSide::BOTTOM, // bottom
+                    GridSide::BACK, // back
                 ],
                 idx_1: (13, 1),
                 idx_2: (13, 1),
@@ -198,7 +198,7 @@ impl Cube {
             },
         };
 
-        builder.build_cube_slices()
+        builder.build_cube_slices(grid)
     }
 }
 
@@ -227,7 +227,7 @@ struct CubeSliceBuilder<'a> {
 }
 
 impl <'a> CubeSliceBuilder<'a> {
-    fn build_cube_slices(self) -> [CubeSlice; 3] {
+    fn build_cube_slices(self, grid: &Grid) -> [CubeSlice; 3] {
         let sf_0_idx = self.split_faces[0].idx();
         let sf_1_idx = self.split_faces[1].idx();
         let sf_2_idx = self.split_faces[2].idx();
@@ -247,6 +247,40 @@ impl <'a> CubeSliceBuilder<'a> {
             last_corners.rotate_right(2);
         }
 
+        let neighbors_1 = grid.get_neighbors(self.face_1);
+        // neighbors_1.rotate_right(1);
+        let neighbors_1_colors: Vec<[Color; 3]> = neighbors_1.iter()
+            .map(|ns| {
+                let mut res = ns.read_from_render_ready(grid);
+                // res.reverse();
+                res
+            })
+            // .rev()
+            .collect();
+
+        for colors in neighbors_1_colors.iter() {
+            println!("1: {:?}", colors);
+        }
+        
+        let neighbors_2 = grid.get_neighbors(self.face_2);
+        let mut neighbors_2_colors: Vec<[Color; 3]> = neighbors_2.iter()
+            .map(|ns| ns.read_from_render_ready(grid))
+            // .rev()
+            .collect();
+        // neighbors_2_colors.swap(1, 3);
+        
+        for colors in neighbors_2_colors.iter() {
+            println!("2: {:?}", colors);
+        }
+
+        let magenta_colors = vec![
+            [Color::Magenta, Color::Green, Color::Red],
+            [Color::Magenta, Color::Green, Color::Red],
+            [Color::Magenta, Color::Green, Color::Red],
+            // [Color::Magenta, Color::Green, Color::Red],
+            [Color::Blue, Color::Blue, Color::Blue],
+        ];
+
         [
             CubeSlice::new(
                 self.cube.faces[f_1_idx].clone(),
@@ -257,7 +291,9 @@ impl <'a> CubeSliceBuilder<'a> {
                         self.cube.faces[sf_2_idx].markers.get(self.idx_2.0).unwrap().clone(),
                         self.cube.faces[sf_2_idx].markers.get(self.idx_2.1).unwrap().clone(),
                     ], GridFace::empty()
-                )
+                ),
+                // magenta_colors.clone()
+                neighbors_1_colors
             ),
             CubeSlice::new(
                 Face::new(
@@ -273,11 +309,15 @@ impl <'a> CubeSliceBuilder<'a> {
                         self.cube.faces[sf_0_idx].markers.get(self.idx_3.0).unwrap().clone(),
                         self.cube.faces[sf_2_idx].markers.get(self.idx_4.1).unwrap().clone(),
                         self.cube.faces[sf_2_idx].markers.get(self.idx_4.0).unwrap().clone(),
-                    ], GridFace::empty())
+                    ], GridFace::empty()
+                ),
+                magenta_colors.clone()
             ),
             CubeSlice::new(
                 Face::new(last_corners, GridFace::empty()),
                 self.cube.faces[f_2_idx].clone(),
+                // magenta_colors
+                neighbors_2_colors
             ),
         ]
     }

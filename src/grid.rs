@@ -39,7 +39,7 @@ enum SliceType {
     RIGHT,
 }
 
-struct NeighborSlice {
+pub struct NeighborSlice {
     side: GridSide,
     slice_type: SliceType,
 }
@@ -67,6 +67,40 @@ impl NeighborSlice {
                     face.grid[2][0],
                     face.grid[1][0],
                     face.grid[0][0],
+                ]
+            },
+            SliceType::RIGHT => {
+                [
+                    face.grid[0][2],
+                    face.grid[1][2],
+                    face.grid[2][2],
+                ]
+            },
+        }
+    }
+
+    pub fn read_from_render_ready(&self, grid: &Grid) -> [Color; 3] {
+        let face = &grid.faces[self.side.idx()];
+        match self.slice_type {
+            SliceType::TOP => {
+                [
+                    face.grid[0][0],
+                    face.grid[0][1],
+                    face.grid[0][2],
+                ]
+            },
+            SliceType::BOTTOM => {
+                [
+                    face.grid[2][2],
+                    face.grid[2][1],
+                    face.grid[2][0],
+                ]
+            },
+            SliceType::LEFT => {
+                [
+                    face.grid[0][0],
+                    face.grid[1][0],
+                    face.grid[2][0],
                 ]
             },
             SliceType::RIGHT => {
@@ -257,12 +291,22 @@ impl Grid {
         print!("\n\n\n");
     }
 
-    fn rotate_buffers(buffers: &mut Vec<[Color; 3]>, direction: MoveDirection) {
-        match direction {
-            MoveDirection::Clockwise => buffers.rotate_right(1),
-            MoveDirection::CounterClockwise => buffers.rotate_left(1),
-            MoveDirection::Double => buffers.rotate_right(2),
-        }
+    fn rotate_buffers(buffers: &mut Vec<[Color; 3]>, grid_side: &GridSide, direction: MoveDirection) {
+        
+        match grid_side {
+            GridSide::LEFT => match direction {
+                MoveDirection::Clockwise => buffers.rotate_right(1),
+                MoveDirection::CounterClockwise => buffers.rotate_left(1),
+                MoveDirection::Double => buffers.rotate_right(2),
+            }
+            _ => match direction {
+                
+                MoveDirection::Clockwise => buffers.rotate_left(1),
+                MoveDirection::CounterClockwise => buffers.rotate_right(1),
+                MoveDirection::Double => buffers.rotate_right(2),
+            }
+        };
+        
     }
 
     pub fn move_face(&mut self, side: GridSide, direction: MoveDirection) {
@@ -276,32 +320,32 @@ impl Grid {
             )
             .collect();
 
-        Grid::rotate_buffers(&mut buffers, direction);
+        Grid::rotate_buffers(&mut buffers, &side, direction);
 
         for (slice, colors) in neighbors.into_iter().zip(buffers) {
             slice.write_to(self, colors);
         }        
     }
 
-    fn get_neighbors(&self, side: GridSide) -> [NeighborSlice; 4] {
+    pub fn get_neighbors(&self, side: GridSide) -> [NeighborSlice; 4] {
         match side {
             GridSide::TOP => [
                 NeighborSlice {slice_type: SliceType::TOP, side: GridSide::FRONT},
-                NeighborSlice {slice_type: SliceType::TOP, side: GridSide::LEFT},
-                NeighborSlice {slice_type: SliceType::TOP, side: GridSide::BACK},
                 NeighborSlice {slice_type: SliceType::TOP, side: GridSide::RIGHT},
+                NeighborSlice {slice_type: SliceType::TOP, side: GridSide::BACK},
+                NeighborSlice {slice_type: SliceType::TOP, side: GridSide::LEFT},
             ],
             GridSide::FRONT => [
                 NeighborSlice {slice_type: SliceType::TOP, side: GridSide::BOTTOM},
-                NeighborSlice {slice_type: SliceType::RIGHT, side: GridSide::LEFT},
-                NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::TOP},
                 NeighborSlice {slice_type: SliceType::LEFT, side: GridSide::RIGHT},
+                NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::TOP},
+                NeighborSlice {slice_type: SliceType::RIGHT, side: GridSide::LEFT},
             ],
             GridSide::BOTTOM => [
                 NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::FRONT},
-                NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::RIGHT},
-                NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::BACK},
                 NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::LEFT},
+                NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::BACK},
+                NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::RIGHT},
             ],
             GridSide::LEFT => [
                 NeighborSlice {slice_type: SliceType::LEFT, side: GridSide::TOP},
@@ -311,15 +355,15 @@ impl Grid {
             ],
             GridSide::RIGHT => [
                 NeighborSlice {slice_type: SliceType::RIGHT, side: GridSide::TOP},
-                NeighborSlice {slice_type: SliceType::LEFT, side: GridSide::BACK},
-                NeighborSlice {slice_type: SliceType::RIGHT, side: GridSide::BOTTOM},
                 NeighborSlice {slice_type: SliceType::RIGHT, side: GridSide::FRONT},
+                NeighborSlice {slice_type: SliceType::RIGHT, side: GridSide::BOTTOM},
+                NeighborSlice {slice_type: SliceType::LEFT, side: GridSide::BACK},
             ],
             GridSide::BACK => [
                 NeighborSlice {slice_type: SliceType::TOP, side: GridSide::TOP},
-                NeighborSlice {slice_type: SliceType::LEFT, side: GridSide::LEFT},
-                NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::BOTTOM},
                 NeighborSlice {slice_type: SliceType::RIGHT, side: GridSide::RIGHT},
+                NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::BOTTOM},
+                NeighborSlice {slice_type: SliceType::LEFT, side: GridSide::LEFT},
             ],
         }
     }

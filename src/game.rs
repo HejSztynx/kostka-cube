@@ -44,7 +44,8 @@ fn start(grid: &mut Grid) {
             "s" => angle_x -= angle_unit,
             _ => match grid.apply_move(input) {
                 Ok(_) => {
-                    let slices = cube.create_cube_slices(Axis::Z);
+                    cube.apply_grid(grid);
+                    let slices = cube.create_cube_slices(grid, Axis::X);
                     screen.render(&slices[0]);
                     screen.print_screen();
                     let _ = io::stdin().read_line(&mut String::new());

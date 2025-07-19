@@ -36,43 +36,46 @@ pub struct CubeSlice {
 }
 
 impl CubeSlice {
-    pub fn new(face_1: Face, face_2: Face) -> CubeSlice {
+    pub fn new(face_1: Face, face_2: Face, colors: Vec<[Color; 3]>) -> CubeSlice {
         let face_slices = [
-            FaceSlice::new([
+            FaceSlice::new(
+                [
                     face_1.corners[0],
                     face_2.corners[1],
                     face_2.corners[0],
                     face_1.corners[1],
                 ],
-                [Color::Blue; 3]
+                *colors.get(0).unwrap()
             ),
-            FaceSlice::new([
-                    face_2.corners[1],
-                    face_1.corners[0],
-                    face_1.corners[3],
-                    face_2.corners[2],
-                ],
-                [Color::Red; 3]
-            ),
-            FaceSlice::new([
-                    face_1.corners[2],
-                    face_2.corners[3],
-                    face_2.corners[2],
-                    face_1.corners[3],
-                ],
-                [Color::Green; 3]
-            ),
-            FaceSlice::new([
+            FaceSlice::new(
+                [
                     face_1.corners[1],
                     face_2.corners[0],
                     face_2.corners[3],
                     face_1.corners[2],
                 ],
-                [Color::Orange; 3]
+                *colors.get(1).unwrap()
+            ),
+            FaceSlice::new(
+                [
+                    face_1.corners[2],
+                    face_2.corners[3],
+                    face_2.corners[2],
+                    face_1.corners[3],
+                ],
+                *colors.get(2).unwrap()
+            ),
+            FaceSlice::new(
+                [
+                    face_1.corners[0],
+                    face_2.corners[1],
+                    face_2.corners[2],
+                    face_1.corners[3],
+                ],
+                *colors.get(3).unwrap()
+                // [Color::Magenta; 3]
             ),
         ];
-
-        print!("----------------------------------------------");
 
         CubeSlice { face_1, face_2, face_slices }
     }
