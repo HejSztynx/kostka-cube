@@ -1,4 +1,4 @@
-use crate::grid::{Grid, GridFace};
+use crate::{grid::{Grid, GridFace}, screen::{AnyFace, Renderable}, slice::CubeSlice};
 use super::geometry::Point3D;
 
 const CUBE_SIZE: f32 = 2.0;
@@ -22,14 +22,22 @@ impl Color {
             Color::Yellow => "\x1b[93m",
             Color::Blue  => "\x1b[94m",
             Color::Red   => "\x1b[91m",
-            Color::Gray  => "\x1b[90m",
+            Color::Green => "\x1b[92m",
             Color::Orange => "\x1b[38;5;208m",
             Color::Magenta => "\x1b[95m",
-            Color::Green => "\x1b[92m"
+            Color::Gray  => "\x1b[90m",
         }
     }
 }
 
+#[derive(PartialEq, Eq)]
+pub enum Axis {
+    X,
+    Y,
+    Z,
+}
+
+#[derive(Clone)]
 pub struct Face {
     pub corners: [Point3D; 4],
     pub markers: Vec<Point3D>,
@@ -114,8 +122,77 @@ impl Cube {
             .collect()
     }
 
-    pub fn get_visible_faces(&mut self) -> &Vec<Face> {
-        self.faces.sort_by(|a, b| a.avg_z().partial_cmp(&b.avg_z()).unwrap());
-        &self.faces
+    pub fn create_cube_slices(&self, axis: Axis) -> [CubeSlice; 3] {
+        let builder: CubeSliceBuilder = match axis {
+            Axis::X => CubeSliceBuilder {
+                split_faces: [
+                    &self.faces[0],
+                    &self.faces[4],
+                    &self.faces[5],
+                    &self.faces[2],
+                ],
+                face_1: &self.faces[1],
+                face_2: &self.faces[3],
+            },
+            _ => panic!(),
+        };
+
+        [
+            CubeSlice::new(
+                builder.face_1.clone(),
+                Face::new([
+                        builder.split_faces[0].markers.get(13).unwrap().clone(),
+                        builder.split_faces[0].markers.get(1).unwrap().clone(),
+                        builder.split_faces[2].markers.get(13).unwrap().clone(),
+                        builder.split_faces[2].markers.get(1).unwrap().clone(),
+                    ], GridFace::empty())
+                ),
+            CubeSlice::new(
+                Face::new([
+                    builder.split_faces[0].markers.get(1).unwrap().clone(),
+                    builder.split_faces[0].markers.get(13).unwrap().clone(),
+                    builder.split_faces[2].markers.get(1).unwrap().clone(),
+                    builder.split_faces[2].markers.get(13).unwrap().clone(),
+                    ], GridFace::empty()),
+                Face::new([
+                        builder.split_faces[0].markers.get(14).unwrap().clone(),
+                        builder.split_faces[0].markers.get(2).unwrap().clone(),
+                        builder.split_faces[2].markers.get(14).unwrap().clone(),
+                        builder.split_faces[2].markers.get(2).unwrap().clone(),
+                    ], GridFace::empty())
+                ),
+            CubeSlice::new(
+                Face::new([
+                    builder.split_faces[0].markers.get(2).unwrap().clone(),
+                    builder.split_faces[0].markers.get(14).unwrap().clone(),
+                    builder.split_faces[2].markers.get(2).unwrap().clone(),
+                    builder.split_faces[2].markers.get(14).unwrap().clone(),
+                    ], GridFace::empty()),
+                builder.face_2.clone()
+                ),
+        ]
     }
+
+    // pub fn get_visible_faces(&mut self) -> &Vec<Face> {
+    //     self.faces.sort_by(|a, b| a.avg_z().partial_cmp(&b.avg_z()).unwrap());
+    //     &self.faces
+    // }
+}
+
+impl Renderable for Cube {
+    fn get_visible_faces(&self) -> Vec<AnyFace> {
+        let mut faces_clone: Vec<AnyFace> = self.faces.clone()
+            .into_iter()
+            .map(|f| AnyFace::Face(f))
+            .collect();
+
+        faces_clone.sort_by(|a, b| a.avg_z().partial_cmp(&b.avg_z()).unwrap());
+        faces_clone
+    }
+}
+
+struct CubeSliceBuilder<'a> {
+    split_faces: [&'a Face; 4],
+    face_1: &'a Face,
+    face_2: &'a Face,
 }

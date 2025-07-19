@@ -118,6 +118,12 @@ impl GridFace {
         }
     }
 
+    pub fn empty() -> GridFace {
+        GridFace {
+            grid: [[Color::Gray; 3]; 3],
+        }
+    }
+
     pub fn print(&self) {
         for row in self.grid.iter() {
             for color in row {

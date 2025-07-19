@@ -1,4 +1,4 @@
-use crate::{cube::Cube, grid::Grid, scramble::scramble, screen::Screen};
+use crate::{cube::{Cube, Axis}, grid::Grid, scramble::scramble, screen::Screen};
 use core::f32;
 use std::io::{self, Write};
 
@@ -22,7 +22,7 @@ fn start(grid: &mut Grid) {
         let mut cube = Cube::new(position, angle_y, angle_x);
         
         cube.apply_grid(grid);
-        screen.render_cube(&mut cube);
+        screen.render(&cube);
         screen.print_screen();
         
         print!("> ");
@@ -43,7 +43,23 @@ fn start(grid: &mut Grid) {
             "w" => angle_x += angle_unit,
             "s" => angle_x -= angle_unit,
             _ => match grid.apply_move(input) {
-                Ok(_) => { }
+                Ok(_) => {
+                    let slices = cube.create_cube_slices(Axis::X);
+                    screen.render(&slices[0]);
+                    screen.print_screen();
+                    let _ = io::stdin().read_line(&mut String::new());
+                    screen.clear_screen();
+                    
+                    screen.render(&slices[1]);
+                    screen.print_screen();
+                    let _ = io::stdin().read_line(&mut String::new());
+                    screen.clear_screen(); 
+                    
+                    screen.render(&slices[2]);
+                    screen.print_screen();
+                    let _ = io::stdin().read_line(&mut String::new());
+                    screen.clear_screen(); 
+                }
                 Err(err) => {
                     println!("{}", err);
                     let _ = io::stdin().read_line(&mut String::new());

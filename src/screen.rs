@@ -1,5 +1,7 @@
 use std::io::{self, Write};
 
+use crate::slice::{CubeSlice, FaceSlice};
+
 use super::geometry::{Point2D, Point3D, Triangle};
 use super::cube::{Color, Cube, Face};
 
@@ -11,6 +13,24 @@ const SCREEN_Y_OFFSET: isize = 22;
 
 const PRINT_CHAR: &str = "██";
 const ANSI_RESET: &str = "\x1b[0m";
+
+pub enum AnyFace {
+    Face(Face),
+    FaceSlice(FaceSlice),
+}
+
+impl AnyFace {
+    pub fn avg_z(&self) -> f32 {
+        match self {
+            AnyFace::Face(f) => f.avg_z(),
+            AnyFace::FaceSlice(fs) => fs.avg_z(),
+        }
+    }
+}
+
+pub trait Renderable {
+    fn get_visible_faces(&self) -> Vec<AnyFace>;
+}
 
 pub struct Screen {
     screen: [[Option<Color>; SCREEN_X]; SCREEN_Y],
@@ -81,11 +101,45 @@ impl Screen {
         }
     }
 
-    pub fn render_cube(&mut self, cubie: &mut Cube) {
-        let faces = cubie.get_visible_faces();
+    fn render_face_slice(&mut self, face_slice: &FaceSlice) {
+        let projected_markers: Vec<Point2D> = face_slice.markers
+            .iter()
+            .map(|&p| self.project_point(p))
+            .collect();
+
+        for row in 0..3 {
+            let tris = [
+                Triangle(projected_markers.get(row * 2).unwrap().clone(), 
+                    projected_markers.get(row * 2 + 1).unwrap().clone(), 
+                    projected_markers.get((row + 1) * 2 + 1).unwrap().clone()
+                ),
+                Triangle(projected_markers.get(row * 2).unwrap().clone(), 
+                    projected_markers.get((row + 1) * 2 + 1).unwrap().clone(),
+                    projected_markers.get((row + 1) * 2).unwrap().clone()
+                ),
+            ];
+            let color = face_slice.colors[row];
+            for tri in tris {
+                self.rasterize_triangle(tri, color);
+            }
+        }
+    }
+
+    // pub fn render_cube(&mut self, cubie: &mut Cube) {
+    //     let faces = cubie.get_visible_faces();
         
+    //     for face in faces.into_iter().take(3).rev() {
+    //         self.render_face(&face);
+    //     }
+    // }
+
+    pub fn render(&mut self, renderable: &dyn Renderable) {
+        let faces = renderable.get_visible_faces();
         for face in faces.into_iter().take(3).rev() {
-            self.render_face(&face);
+            match face {
+                AnyFace::Face(f) => self.render_face(&f),
+                AnyFace::FaceSlice(fs) => self.render_face_slice(&fs),
+            };
         }
     }
 

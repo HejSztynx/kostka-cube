@@ -1,14 +1,8 @@
+use crate::cube::Axis;
 use crate::grid::{Grid, GridSide, MoveDirection};
 
 use rand::seq::SliceRandom;
 use rand::thread_rng;
-
-#[derive(PartialEq, Eq)]
-enum Axis {
-    X,
-    Y,
-    Z,
-}
 
 struct Move {
     mv: &'static str,
