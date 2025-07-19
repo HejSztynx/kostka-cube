@@ -20,7 +20,7 @@ pub enum GridSide {
 }
 
 impl GridSide {
-    fn idx(&self) -> usize {
+    pub fn idx(&self) -> usize {
         match self {
             GridSide::TOP => 0,
             GridSide::LEFT => 1,
@@ -30,6 +30,13 @@ impl GridSide {
             GridSide::BOTTOM => 5,
         }
     }
+}
+
+enum SliceType {
+    TOP,
+    BOTTOM,
+    LEFT,
+    RIGHT,
 }
 
 struct NeighborSlice {
@@ -97,13 +104,6 @@ impl NeighborSlice {
             },
         }
     }
-}
-
-enum SliceType {
-    TOP,
-    BOTTOM,
-    LEFT,
-    RIGHT,
 }
 
 #[derive(Clone, Copy)]
