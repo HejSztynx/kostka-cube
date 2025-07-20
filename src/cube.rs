@@ -158,9 +158,9 @@ impl Cube {
                 // ],
                 split_faces: [
                     GridSide::BACK, // back
-                    GridSide::LEFT, // left
-                    GridSide::FRONT, // front
                     GridSide::RIGHT, // right
+                    GridSide::FRONT, // front
+                    GridSide::LEFT, // left
                 ],
                 idx_1: (4, 7),
                 idx_2: (4, 7),
@@ -182,9 +182,9 @@ impl Cube {
                 // ],
                 split_faces: [
                     GridSide::TOP, // top
-                    GridSide::LEFT, // left
-                    GridSide::BOTTOM, // bottom
                     GridSide::RIGHT, // right
+                    GridSide::BOTTOM, // bottom
+                    GridSide::LEFT, // left
                 ],
                 idx_1: (11, 8),
                 idx_2: (4, 7),

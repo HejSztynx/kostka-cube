@@ -308,7 +308,8 @@ impl Grid {
         
         match grid_side {
             GridSide::LEFT 
-                | GridSide::TOP => match direction {
+                | GridSide::TOP
+                | GridSide::FRONT => match direction {
                 MoveDirection::Clockwise => buffers.rotate_right(1),
                 MoveDirection::CounterClockwise => buffers.rotate_left(1),
                 MoveDirection::Double => buffers.rotate_right(2),
@@ -350,9 +351,9 @@ impl Grid {
                 NeighborSlice {slice_type: SliceType::TOP, side: GridSide::LEFT},
             ],
             GridSide::FRONT => [
-                NeighborSlice {slice_type: SliceType::TOP, side: GridSide::BOTTOM},
-                NeighborSlice {slice_type: SliceType::LEFT, side: GridSide::RIGHT},
                 NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::TOP},
+                NeighborSlice {slice_type: SliceType::LEFT, side: GridSide::RIGHT},
+                NeighborSlice {slice_type: SliceType::TOP, side: GridSide::BOTTOM},
                 NeighborSlice {slice_type: SliceType::RIGHT, side: GridSide::LEFT},
             ],
             GridSide::BOTTOM => [

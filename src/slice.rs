@@ -61,7 +61,21 @@ impl CubeSlice {
                     }
                 }
             },
-            _ => {}
+            Axis::Z => {
+                let last = face_1.grid_face.grid[0][0] == Color::Gray
+                    && face_2.grid_face.grid[0][0] != Color::Gray;
+                if !last {
+                    if let Some(color) = colors.get_mut(0) {
+                        color.reverse();
+                    }
+                    if let Some(color) = colors.get_mut(2) {
+                        color.reverse();
+                    }
+                }
+                if let Some(color) = colors.get_mut(3) {
+                    color.reverse();
+                }
+            }
         }
 
 
