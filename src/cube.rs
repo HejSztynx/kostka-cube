@@ -236,6 +236,8 @@ impl <'a> CubeSliceBuilder<'a> {
         let f_1_idx = self.face_1.idx();
         let f_2_idx = self.face_2.idx();
 
+        let axis = &self.face_1.axis();
+
         let mut last_corners = [
             self.cube.faces[sf_0_idx].markers.get(self.idx_3.0).unwrap().clone(),
             self.cube.faces[sf_0_idx].markers.get(self.idx_3.1).unwrap().clone(),
@@ -293,7 +295,9 @@ impl <'a> CubeSliceBuilder<'a> {
                     ], GridFace::empty()
                 ),
                 // magenta_colors.clone()
-                neighbors_1_colors
+                neighbors_1_colors,
+                axis,
+                false
             ),
             CubeSlice::new(
                 Face::new(
@@ -311,13 +315,17 @@ impl <'a> CubeSliceBuilder<'a> {
                         self.cube.faces[sf_2_idx].markers.get(self.idx_4.0).unwrap().clone(),
                     ], GridFace::empty()
                 ),
-                magenta_colors.clone()
+                magenta_colors.clone(),
+                axis,
+                false
             ),
             CubeSlice::new(
                 Face::new(last_corners, GridFace::empty()),
                 self.cube.faces[f_2_idx].clone(),
                 // magenta_colors
-                neighbors_2_colors
+                neighbors_2_colors,
+                axis,
+                self.flip
             ),
         ]
     }

@@ -45,7 +45,7 @@ fn start(grid: &mut Grid) {
             _ => match grid.apply_move(input) {
                 Ok(_) => {
                     cube.apply_grid(grid);
-                    let slices = cube.create_cube_slices(grid, Axis::X);
+                    let slices = cube.create_cube_slices(grid, Axis::Y);
                     screen.render(&slices[0]);
                     screen.print_screen();
                     let _ = io::stdin().read_line(&mut String::new());

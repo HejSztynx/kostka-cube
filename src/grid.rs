@@ -1,3 +1,5 @@
+use crate::cube::Axis;
+
 use super::cube::Color;
 
 const PRINT_CHAR: &str = "██";
@@ -28,6 +30,17 @@ impl GridSide {
             GridSide::RIGHT => 3,
             GridSide::BACK => 4,
             GridSide::BOTTOM => 5,
+        }
+    }
+
+    pub fn axis(&self) -> Axis {
+        match self {
+            GridSide::TOP => Axis::Y,
+            GridSide::LEFT => Axis::X,
+            GridSide::FRONT => Axis::Z,
+            GridSide::RIGHT => Axis::X,
+            GridSide::BACK => Axis::Z,
+            GridSide::BOTTOM => Axis::Y,
         }
     }
 }
@@ -294,7 +307,8 @@ impl Grid {
     fn rotate_buffers(buffers: &mut Vec<[Color; 3]>, grid_side: &GridSide, direction: MoveDirection) {
         
         match grid_side {
-            GridSide::LEFT => match direction {
+            GridSide::LEFT 
+                | GridSide::TOP => match direction {
                 MoveDirection::Clockwise => buffers.rotate_right(1),
                 MoveDirection::CounterClockwise => buffers.rotate_left(1),
                 MoveDirection::Double => buffers.rotate_right(2),
@@ -330,9 +344,9 @@ impl Grid {
     pub fn get_neighbors(&self, side: GridSide) -> [NeighborSlice; 4] {
         match side {
             GridSide::TOP => [
-                NeighborSlice {slice_type: SliceType::TOP, side: GridSide::FRONT},
-                NeighborSlice {slice_type: SliceType::TOP, side: GridSide::RIGHT},
                 NeighborSlice {slice_type: SliceType::TOP, side: GridSide::BACK},
+                NeighborSlice {slice_type: SliceType::TOP, side: GridSide::RIGHT},
+                NeighborSlice {slice_type: SliceType::TOP, side: GridSide::FRONT},
                 NeighborSlice {slice_type: SliceType::TOP, side: GridSide::LEFT},
             ],
             GridSide::FRONT => [
@@ -342,10 +356,10 @@ impl Grid {
                 NeighborSlice {slice_type: SliceType::RIGHT, side: GridSide::LEFT},
             ],
             GridSide::BOTTOM => [
-                NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::FRONT},
-                NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::LEFT},
                 NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::BACK},
                 NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::RIGHT},
+                NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::FRONT},
+                NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::LEFT},
             ],
             GridSide::LEFT => [
                 NeighborSlice {slice_type: SliceType::LEFT, side: GridSide::TOP},

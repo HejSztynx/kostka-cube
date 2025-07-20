@@ -1,4 +1,4 @@
-use crate::{cube::{Color, Face}, geometry::Point3D, screen::{AnyFace, Renderable}};
+use crate::{cube::{Axis, Color, Face}, geometry::Point3D, screen::{AnyFace, Renderable}};
 
 #[derive(Clone)]
 pub struct FaceSlice {
@@ -36,7 +36,35 @@ pub struct CubeSlice {
 }
 
 impl CubeSlice {
-    pub fn new(face_1: Face, face_2: Face, colors: Vec<[Color; 3]>) -> CubeSlice {
+    pub fn new(face_1: Face, face_2: Face, mut colors: Vec<[Color; 3]>, axis: &Axis, flip: bool) -> CubeSlice {
+        match axis {
+            Axis::X => {
+                if let Some(color) = colors.get_mut(3) {
+                    color.reverse();
+                }
+            },
+            Axis::Y => {
+                if flip {
+                    colors.rotate_right(2);
+                } else {
+                    if let Some(color) = colors.get_mut(0) {
+                        color.reverse();
+                    }
+                    if let Some(color) = colors.get_mut(1) {
+                        color.reverse();
+                    }
+                    if let Some(color) = colors.get_mut(2) {
+                        color.reverse();
+                    }
+                    if let Some(color) = colors.get_mut(3) {
+                        color.reverse();
+                    }
+                }
+            },
+            _ => {}
+        }
+
+
         let face_slices = [
             FaceSlice::new(
                 [
@@ -67,10 +95,10 @@ impl CubeSlice {
             ),
             FaceSlice::new(
                 [
-                    face_1.corners[0],
-                    face_2.corners[1],
-                    face_2.corners[2],
                     face_1.corners[3],
+                    face_2.corners[2],
+                    face_2.corners[1],
+                    face_1.corners[0],
                 ],
                 *colors.get(3).unwrap()
                 // [Color::Magenta; 3]
