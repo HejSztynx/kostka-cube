@@ -1,4 +1,4 @@
-use crate::{cube::{Axis, Color, Face}, geometry::Point3D, screen::{AnyFace, Renderable}};
+use crate::{cube::{Axis, Color, Face}, geometry::Point3D, grid::{GridSide, MoveDirection}, screen::{AnyFace, Renderable}};
 
 #[derive(Clone)]
 pub struct FaceSlice {
@@ -24,10 +24,53 @@ impl FaceSlice {
     }
 }
 
+
+
+pub struct CubeMove {
+    pub axis: Axis,
+    pub grid_side: GridSide,
+    pub order: CubeSliceOrder,
+    pub direction: MoveDirection,
+}
+
+impl CubeMove {
+    pub fn from_str(mv: &str) -> Result<CubeMove, String> {
+        let (side_char, suffix) = mv.split_at(1);
+
+        let (axis, grid_side, order) = match side_char {
+            "R" => (Axis::X, GridSide::RIGHT, CubeSliceOrder::LAST),
+            "L" => (Axis::X, GridSide::LEFT, CubeSliceOrder::FIRST),
+            "U" => (Axis::Y, GridSide::TOP, CubeSliceOrder::FIRST),
+            "D" => (Axis::Y, GridSide::BOTTOM, CubeSliceOrder::LAST),
+            "F" => (Axis::Z, GridSide::FRONT, CubeSliceOrder::FIRST),
+            "B" => (Axis::Z, GridSide::BACK, CubeSliceOrder::LAST),
+            _ => return Err(format!("Incorrect move '{}'", mv)),
+        };
+        let direction = match suffix {
+            "" => Ok(MoveDirection::Clockwise),
+            "'" => Ok(MoveDirection::CounterClockwise),
+            "2" => Ok(MoveDirection::Double),
+            _ => Err(format!("Incorrect move '{}'", mv)),
+        }?;
+
+        Ok(CubeMove { axis, grid_side, order, direction })
+    }
+}
+
 pub enum CubeSliceOrder {
     FIRST,
     MIDDLE,
     LAST,
+}
+
+impl CubeSliceOrder {
+    pub fn idx(&self) -> usize {
+        match self {
+            Self::FIRST => 0,
+            Self::MIDDLE => 1,
+            Self::LAST => 2,
+        }
+    }
 }
 
 pub struct CubeSlice {

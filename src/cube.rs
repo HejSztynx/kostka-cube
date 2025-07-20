@@ -122,7 +122,7 @@ impl Cube {
             .collect()
     }
 
-    pub fn create_cube_slices(&self, grid: &Grid, axis: Axis) -> [CubeSlice; 3] {
+    pub fn create_cube_slices(&self, grid: &Grid, axis: &Axis) -> [CubeSlice; 3] {
         let builder: CubeSliceBuilder = match axis {
             Axis::X => CubeSliceBuilder {
                 cube: &self,

@@ -1,4 +1,9 @@
-use crate::{cube::{Cube, Axis}, grid::Grid, scramble::scramble, screen::Screen};
+use crate::cube::Cube;
+use crate::grid::Grid;
+use crate::screen::Screen;
+use crate::slice::CubeMove;
+use crate::scramble::scramble;
+
 use core::f32;
 use std::io::{self, Write};
 
@@ -42,24 +47,9 @@ fn start(grid: &mut Grid) {
             "d" => angle_y -= angle_unit,
             "w" => angle_x += angle_unit,
             "s" => angle_x -= angle_unit,
-            _ => match grid.apply_move(input) {
+            _ => match make_move(input, grid, &mut screen, &mut cube) {
                 Ok(_) => {
-                    cube.apply_grid(grid);
-                    let slices = cube.create_cube_slices(grid, Axis::Z);
-                    screen.render(&slices[0]);
-                    screen.print_screen();
-                    let _ = io::stdin().read_line(&mut String::new());
-                    screen.clear_screen();
                     
-                    screen.render(&slices[1]);
-                    screen.print_screen();
-                    let _ = io::stdin().read_line(&mut String::new());
-                    screen.clear_screen(); 
-                    
-                    screen.render(&slices[2]);
-                    screen.print_screen();
-                    let _ = io::stdin().read_line(&mut String::new());
-                    screen.clear_screen(); 
                 }
                 Err(err) => {
                     println!("{}", err);
@@ -69,6 +59,22 @@ fn start(grid: &mut Grid) {
             }
         }
     }
+}
+
+fn make_move(input: &str, grid: &mut Grid, screen: &mut Screen, cube: &mut Cube) -> Result<(), String> {
+    let cube_move = CubeMove::from_str(input)?;
+    
+    let slices = cube.create_cube_slices(grid, &cube_move.axis);
+    let slice_to_render = &slices[cube_move.order.idx()];
+
+    screen.render(slice_to_render);
+    screen.print_screen();
+    let _ = io::stdin().read_line(&mut String::new());
+    screen.clear_screen();
+
+    grid.apply_move(cube_move);
+
+    Ok(())
 }
 
 pub fn game() {

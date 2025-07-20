@@ -1,4 +1,4 @@
-use crate::cube::Axis;
+use crate::{cube::Axis, slice::CubeMove};
 
 use super::cube::Color;
 
@@ -240,27 +240,8 @@ impl Grid {
         }
     }
 
-    pub fn apply_move(&mut self, mv: &str) -> Result<(), String> {
-        let (side_char, suffix) = mv.split_at(1);
-        let side = match side_char {
-            "R" => GridSide::RIGHT,
-            "L" => GridSide::LEFT,
-            "U" => GridSide::TOP,
-            "D" => GridSide::BOTTOM,
-            "F" => GridSide::FRONT,
-            "B" => GridSide::BACK,
-            _ => return Err(format!("Incorrect move '{}'", mv)),
-        };
-        let direction = match suffix {
-            "" => Ok(MoveDirection::Clockwise),
-            "'" => Ok(MoveDirection::CounterClockwise),
-            "2" => Ok(MoveDirection::Double),
-            _ => Err(format!("Incorrect move '{}'", mv)),
-        }?;
-
-        self.move_face(side, direction);
-
-        Ok(())
+    pub fn apply_move(&mut self, mv: CubeMove) {
+        self.move_face(mv.grid_side, mv.direction);
     }
 
     pub fn print(&self) {
