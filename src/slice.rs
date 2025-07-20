@@ -231,4 +231,17 @@ impl Renderable for CubeSlice {
         faces.sort_by(|a, b| a.avg_z().partial_cmp(&b.avg_z()).unwrap());
         faces
     }
+
+    fn avg_z(&self) -> f32 {
+        let mut sum = 0.0;
+        
+        sum += self.face_1.avg_z();
+        sum += self.face_2.avg_z();
+
+        for fs in &self.face_slices {
+            sum += fs.avg_z();
+        }
+
+        sum / 6.0
+    }
 }

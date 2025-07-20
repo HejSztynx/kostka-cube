@@ -1,6 +1,6 @@
 use crate::{cube::Cube, grid::MoveDirection};
 use crate::grid::Grid;
-use crate::screen::Screen;
+use crate::screen::{Renderable, Screen};
 use crate::slice::{CubeMove, CubeSliceOrder};
 use crate::scramble::scramble;
 
@@ -28,7 +28,7 @@ fn start(grid: &mut Grid) {
         let mut cube = Cube::new(position, angle_y, angle_x);
         
         cube.apply_grid(grid);
-        screen.render(&cube);
+        screen.render(vec![&cube]);
         screen.print_screen();
         
         print!("> ");
@@ -81,20 +81,27 @@ fn make_move(input: &str, grid: &mut Grid, screen: &mut Screen, cube: &mut Cube)
     let cube_move = CubeMove::from_str(input)?;
     
     let mut slices = cube.create_cube_slices(grid, &cube_move.axis);
-    let slice_to_render = &mut slices[cube_move.order.idx()];
-
+    
     let no_steps = 8;
     let angle_diff = get_angle_diff(no_steps, &cube_move);
-
-    screen.render(slice_to_render);
+    
+    let slices_vec: Vec<&dyn Renderable> = slices.iter()
+        .map(|s| s as &dyn Renderable)
+        .collect();
+    screen.render(slices_vec);
     screen.print_screen();
     std::thread::sleep(Duration::from_millis(50));
     screen.clear_screen();
-
+    
     for _ in 0..no_steps {
-        slice_to_render.rotate_around_own_axis(angle_diff);
+        let slice_to_move = &mut slices[cube_move.order.idx()];
+        slice_to_move.rotate_around_own_axis(angle_diff);
+        
+        let slices_vec: Vec<&dyn Renderable> = slices.iter()
+            .map(|s| s as &dyn Renderable)
+            .collect();
 
-        screen.render(slice_to_render);
+        screen.render(slices_vec);
         screen.print_screen();
         std::thread::sleep(Duration::from_millis(50));
         screen.clear_screen();

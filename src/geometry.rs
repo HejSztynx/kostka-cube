@@ -37,8 +37,8 @@ impl Point3D {
     }
 
     pub fn rotate_around_axis(&self, axis: Point3D, origin: Point3D, angle_rad: f32) -> Point3D {
-        let axis = axis.normalize(); // oś musi być jednostkowa
-        let v = self.subtract(&origin); // przesuń względem początku
+        let axis = axis.normalize();
+        let v = self.subtract(&origin);
         let cos = angle_rad.cos();
         let sin = angle_rad.sin();
 

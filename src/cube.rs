@@ -164,6 +164,15 @@ impl Renderable for Cube {
         faces_clone.sort_by(|a, b| a.avg_z().partial_cmp(&b.avg_z()).unwrap());
         faces_clone
     }
+
+    fn avg_z(&self) -> f32 {
+        let mut sum = 0.0;
+        for face in &self.faces {
+            sum += face.avg_z();
+        }
+
+        sum / 6.0
+    }
 }
 
 struct CubeSliceBuilder<'a> {
