@@ -1,4 +1,4 @@
-use crate::{grid::{Grid, GridFace, GridSide}, screen::{AnyFace, Renderable}, slice::CubeSlice};
+use crate::{grid::{Grid, GridFace, GridSide, NeighborSlice}, screen::{AnyFace, Renderable}, slice::{CubeSlice, CubeSliceOrder}};
 use super::geometry::Point3D;
 
 const CUBE_SIZE: f32 = 2.0;
@@ -126,74 +126,41 @@ impl Cube {
         let builder: CubeSliceBuilder = match axis {
             Axis::X => CubeSliceBuilder {
                 cube: &self,
-                // split_faces: [
-                //     &self.faces[0], // top
-                //     &self.faces[4], // back
-                //     &self.faces[5], // bottom
-                //     &self.faces[2], // front
-                // ],
-                split_faces: [
-                    GridSide::TOP, // top
-                    GridSide::FRONT, // front
-                    GridSide::BOTTOM, // bottom
-                    GridSide::BACK, // back
-                ],
+                split_faces: (
+                    GridSide::TOP,
+                    GridSide::BOTTOM
+                ),
                 idx_1: (13, 1),
                 idx_2: (13, 1),
                 idx_3: (2, 14),
                 idx_4: (2, 14),
-                flip: false,
-                // face_1: &self.faces[1], // left
-                face_1: GridSide::LEFT, // left
-                // face_2: &self.faces[3], // right
-                face_2: GridSide::RIGHT, // right
+                face_1: GridSide::LEFT,
+                face_2: GridSide::RIGHT,
             },
             Axis::Y => CubeSliceBuilder {
                 cube: &self,
-                // split_faces: [
-                //     &self.faces[4], // back
-                //     &self.faces[1], // left
-                //     &self.faces[2], // front
-                //     &self.faces[3], // right
-                // ],
-                split_faces: [
-                    GridSide::BACK, // back
-                    GridSide::RIGHT, // right
-                    GridSide::FRONT, // front
-                    GridSide::LEFT, // left
-                ],
+                split_faces: (
+                    GridSide::BACK,
+                    GridSide::FRONT
+                ),
                 idx_1: (4, 7),
                 idx_2: (4, 7),
                 idx_3: (11, 8),
                 idx_4: (11, 8),
-                flip: true,
-                // face_1: &self.faces[0], // top
                 face_1: GridSide::TOP,
-                // face_2: &self.faces[5], // bottom
                 face_2: GridSide::BOTTOM,
             },
             Axis::Z => CubeSliceBuilder {
                 cube: &self,
-                // split_faces: [
-                //     &self.faces[0], // top
-                //     &self.faces[1], // left
-                //     &self.faces[5], // bottom
-                //     &self.faces[3], // right
-                // ],
-                split_faces: [
-                    GridSide::TOP, // top
-                    GridSide::RIGHT, // right
-                    GridSide::BOTTOM, // bottom
-                    GridSide::LEFT, // left
-                ],
+                split_faces: (
+                    GridSide::TOP,
+                    GridSide::BOTTOM
+                ),
                 idx_1: (11, 8),
                 idx_2: (4, 7),
                 idx_3: (4, 7),
                 idx_4: (11, 8),
-                flip: false,
-                // face_1: &self.faces[2], // front
                 face_1: GridSide::FRONT,
-                // face_2: &self.faces[4], // back
                 face_2: GridSide::BACK,
             },
         };
@@ -216,22 +183,19 @@ impl Renderable for Cube {
 
 struct CubeSliceBuilder<'a> {
     cube: &'a Cube,
-    split_faces: [GridSide; 4],
+    split_faces: (GridSide, GridSide),
     idx_1: (usize, usize),
     idx_2: (usize, usize),
     idx_3: (usize, usize),
     idx_4: (usize, usize),
-    flip: bool,
     face_1: GridSide,
     face_2: GridSide,
 }
 
 impl <'a> CubeSliceBuilder<'a> {
     fn build_cube_slices(self, grid: &Grid) -> [CubeSlice; 3] {
-        let sf_0_idx = self.split_faces[0].idx();
-        let sf_1_idx = self.split_faces[1].idx();
-        let sf_2_idx = self.split_faces[2].idx();
-        let sf_3_idx = self.split_faces[3].idx();
+        let sf_0_idx = self.split_faces.0.idx();
+        let sf_2_idx = self.split_faces.1.idx();
 
         let f_1_idx = self.face_1.idx();
         let f_2_idx = self.face_2.idx();
@@ -245,43 +209,18 @@ impl <'a> CubeSliceBuilder<'a> {
             self.cube.faces[sf_2_idx].markers.get(self.idx_4.1).unwrap().clone(),
         ];
 
-        if self.flip {
+        if let Axis::Y = axis {
             last_corners.rotate_right(2);
         }
 
         let neighbors_1 = grid.get_neighbors(self.face_1);
-        // neighbors_1.rotate_right(1);
-        let neighbors_1_colors: Vec<[Color; 3]> = neighbors_1.iter()
-            .map(|ns| {
-                let mut res = ns.read_from(grid);
-                // res.reverse();
-                res
-            })
-            // .rev()
-            .collect();
-
-        for colors in neighbors_1_colors.iter() {
-            println!("1: {:?}", colors);
-        }
+        let neighbors_1_colors: Vec<[Color; 3]> = self.get_slices_colors(neighbors_1, grid);
         
+        let middles = grid.get_middle_slices(axis);
+        let middles_colors: Vec<[Color; 3]> = self.get_slices_colors(middles, grid);
+
         let neighbors_2 = grid.get_neighbors(self.face_2);
-        let mut neighbors_2_colors: Vec<[Color; 3]> = neighbors_2.iter()
-            .map(|ns| ns.read_from(grid))
-            // .rev()
-            .collect();
-        // neighbors_2_colors.swap(1, 3);
-        
-        for colors in neighbors_2_colors.iter() {
-            println!("2: {:?}", colors);
-        }
-
-        let magenta_colors = vec![
-            [Color::Magenta, Color::Green, Color::Red],
-            [Color::Magenta, Color::Green, Color::Red],
-            [Color::Magenta, Color::Green, Color::Red],
-            // [Color::Magenta, Color::Green, Color::Red],
-            [Color::Blue, Color::Blue, Color::Blue],
-        ];
+        let neighbors_2_colors: Vec<[Color; 3]> = self.get_slices_colors(neighbors_2, grid);
 
         [
             CubeSlice::new(
@@ -294,10 +233,9 @@ impl <'a> CubeSliceBuilder<'a> {
                         self.cube.faces[sf_2_idx].markers.get(self.idx_2.1).unwrap().clone(),
                     ], GridFace::empty()
                 ),
-                // magenta_colors.clone()
                 neighbors_1_colors,
                 axis,
-                false
+                CubeSliceOrder::FIRST
             ),
             CubeSlice::new(
                 Face::new(
@@ -315,18 +253,23 @@ impl <'a> CubeSliceBuilder<'a> {
                         self.cube.faces[sf_2_idx].markers.get(self.idx_4.0).unwrap().clone(),
                     ], GridFace::empty()
                 ),
-                magenta_colors.clone(),
+                middles_colors,
                 axis,
-                false
+                CubeSliceOrder::MIDDLE
             ),
             CubeSlice::new(
                 Face::new(last_corners, GridFace::empty()),
                 self.cube.faces[f_2_idx].clone(),
-                // magenta_colors
                 neighbors_2_colors,
                 axis,
-                self.flip
+                CubeSliceOrder::LAST
             ),
         ]
+    }
+
+    fn get_slices_colors(&self, slices: [NeighborSlice; 4], grid: &Grid) -> Vec<[Color; 3]> {
+        slices.iter()
+            .map(|ns| ns.read_from(grid))
+            .collect()
     }
 }

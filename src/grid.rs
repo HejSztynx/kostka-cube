@@ -50,6 +50,8 @@ enum SliceType {
     BOTTOM,
     LEFT,
     RIGHT,
+    VERTICAL,
+    HORIZONTAL,
 }
 
 pub struct NeighborSlice {
@@ -89,9 +91,23 @@ impl NeighborSlice {
                     face.grid[2][2],
                 ]
             },
+            SliceType::VERTICAL => {
+                [
+                    face.grid[2][1],
+                    face.grid[1][1],
+                    face.grid[0][1],
+                ]
+            },
+            SliceType::HORIZONTAL => {
+                [
+                    face.grid[1][0],
+                    face.grid[1][1],
+                    face.grid[1][2],
+                ]
+            },
         }
     }
-    
+
     fn write_to(&self, grid: &mut Grid, colors: [Color; 3]) {
         let face = &mut grid.faces[self.side.idx()];
         match self.slice_type {
@@ -114,6 +130,16 @@ impl NeighborSlice {
                 face.grid[0][2] = colors[0];
                 face.grid[1][2] = colors[1];
                 face.grid[2][2] = colors[2];
+            },
+            SliceType::VERTICAL => {
+                face.grid[2][1] = colors[0];
+                face.grid[1][1] = colors[1];
+                face.grid[0][1] = colors[2];
+            },
+            SliceType::HORIZONTAL => {
+                face.grid[1][0] = colors[0];
+                face.grid[1][1] = colors[1];
+                face.grid[1][2] = colors[2];
             },
         }
     }
@@ -304,6 +330,30 @@ impl Grid {
         for (slice, colors) in neighbors.into_iter().zip(buffers) {
             slice.write_to(self, colors);
         }        
+    }
+
+    pub fn get_middle_slices(&self, axis: &Axis) -> [NeighborSlice; 4] {
+        match axis {
+            Axis::X => [
+                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::TOP},
+                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::FRONT},
+                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::BOTTOM},
+                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::BACK},
+            ],
+            Axis::Y => [
+                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::BACK},
+                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::RIGHT},
+                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::FRONT},
+                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::LEFT},
+            ],
+            Axis::Z => [
+                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::TOP},
+                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::RIGHT},
+                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::BOTTOM},
+                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::LEFT},
+            ],
+            
+        }
     }
 
     pub fn get_neighbors(&self, side: GridSide) -> [NeighborSlice; 4] {

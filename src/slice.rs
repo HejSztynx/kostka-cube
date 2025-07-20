@@ -16,17 +16,18 @@ impl FaceSlice {
             markers.push(corners[1].add(&diff.scalar_multiply(i as f32)));
         };
 
-        // for marker in markers.iter() {
-            // println!("{:?}", marker);
-        // }
-        // println!("---------{:?}---------", colors[0]);
-        // println!("---------KONIEC---------");
         FaceSlice { corners, markers, colors }
     }
 
     pub fn avg_z(&self) -> f32 {
         (self.corners[0].z + self.corners[1].z + self.corners[2].z + self.corners[3].z) / 4.0
     }
+}
+
+pub enum CubeSliceOrder {
+    FIRST,
+    MIDDLE,
+    LAST,
 }
 
 pub struct CubeSlice {
@@ -36,61 +37,14 @@ pub struct CubeSlice {
 }
 
 impl CubeSlice {
-    pub fn new(face_1: Face, face_2: Face, mut colors: Vec<[Color; 3]>, axis: &Axis, flip: bool) -> CubeSlice {
-        let last = face_1.grid_face.grid[0][0] == Color::Gray
-            && face_2.grid_face.grid[0][0] != Color::Gray;
-        
-        match axis {
-            Axis::X => {
-                if !last {
-                    if let Some(color) = colors.get_mut(0) {
-                        color.reverse();
-                    }
-                    if let Some(color) = colors.get_mut(1) {
-                        color.reverse();
-                    }
-                    if let Some(color) = colors.get_mut(2) {
-                        color.reverse();
-                    }
-                    if let Some(color) = colors.get_mut(3) {
-                        color.reverse();
-                    }
-                    
-                }
-            },
-            Axis::Y => {
-                if flip {
-                    colors.rotate_right(2);
-                } else {
-                    if let Some(color) = colors.get_mut(0) {
-                        color.reverse();
-                    }
-                    if let Some(color) = colors.get_mut(1) {
-                        color.reverse();
-                    }
-                    if let Some(color) = colors.get_mut(2) {
-                        color.reverse();
-                    }
-                    if let Some(color) = colors.get_mut(3) {
-                        color.reverse();
-                    }
-                }
-            },
-            Axis::Z => {
-                if !last {
-                    if let Some(color) = colors.get_mut(0) {
-                        color.reverse();
-                    }
-                    if let Some(color) = colors.get_mut(2) {
-                        color.reverse();
-                    }
-                }
-                if let Some(color) = colors.get_mut(3) {
-                    color.reverse();
-                }
-            }
-        }
+    pub fn new(face_1: Face, 
+        face_2: Face, 
+        mut colors: Vec<[Color; 3]>, 
+        axis: &Axis, 
+        order: CubeSliceOrder
+    ) -> CubeSlice {
 
+        Self::flip_colors(&mut colors, axis, order);
 
         let face_slices = [
             FaceSlice::new(
@@ -128,11 +82,62 @@ impl CubeSlice {
                     face_1.corners[0],
                 ],
                 *colors.get(3).unwrap()
-                // [Color::Magenta; 3]
             ),
         ];
 
         CubeSlice { face_1, face_2, face_slices }
+    }
+
+    fn flip_colors(
+        colors: &mut Vec<[Color; 3]>, 
+        axis: &Axis, 
+        order: CubeSliceOrder
+    ) {
+        match axis {
+            Axis::X => {
+                if let CubeSliceOrder::MIDDLE = &order {
+                    if let Some(color) = colors.get_mut(3) {
+                        color.reverse();
+                    }
+                }
+
+                if let CubeSliceOrder::LAST = &order { } else {
+                    for i in 0..4 {
+                        if let Some(color) = colors.get_mut(i) {
+                            color.reverse();
+                        }
+                    }
+                }
+            },
+            Axis::Y => {
+                if let CubeSliceOrder::LAST = &order {
+                    colors.rotate_right(2);
+                } else {
+                    for i in 0..4 {
+                        if let Some(color) = colors.get_mut(i) {
+                            color.reverse();
+                        }
+                    }
+                }
+            },
+            Axis::Z => {
+                if let CubeSliceOrder::LAST = &order { } else {
+                    for i in 0..4 {
+                        if let Some(color) = colors.get_mut(i) {
+                            color.reverse();
+                        }
+                    }
+                }
+                if let CubeSliceOrder::MIDDLE = order {
+                    if let Some(color) = colors.get_mut(0) {
+                        color.reverse();
+                    }
+                    if let Some(color) = colors.get_mut(3) {
+                        color.reverse();
+                    }
+                }
+            }
+        }
     }
 }
 
