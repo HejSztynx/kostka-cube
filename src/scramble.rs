@@ -1,4 +1,4 @@
-use crate::cube::Axis;
+use crate::cube_utils::Axis;
 use crate::grid::{Grid, GridSide, MoveDirection};
 
 use rand::seq::SliceRandom;

@@ -1,4 +1,10 @@
-use crate::{cube::{Axis, Color, Face}, geometry::Point3D, grid::{GridSide, MoveDirection}, screen::{AnyFace, Renderable}};
+use crate::{
+    cube::Face, 
+    cube_utils::{Axis, Color}, 
+    geometry::Point3D, 
+    grid::{GridSide, MoveDirection}, 
+    screen::{AnyFace, Renderable}
+};
 
 #[derive(Clone)]
 pub struct FaceSlice {

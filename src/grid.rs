@@ -1,6 +1,7 @@
-use crate::{cube::Axis, slice::CubeMove};
-
-use super::cube::Color;
+use crate::{
+    cube_utils::{Color, Axis}, 
+    slice::CubeMove
+};
 
 const PRINT_CHAR: &str = "██";
 const ANSI_RESET: &str = "\x1b[0m";
@@ -158,9 +159,7 @@ impl GridFace {
     }
 
     pub fn empty() -> GridFace {
-        GridFace {
-            grid: [[Color::Gray; 3]; 3],
-        }
+        Self::new(Color::Gray)
     }
 
     pub fn print(&self) {
@@ -382,7 +381,7 @@ impl Grid {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cube::{Color};
+    use crate::cube_utils::Color;
     use Color::*;
 
     fn assert_whole_color(grid: &Grid, side: GridSide, color: Color) -> bool {
