@@ -58,7 +58,7 @@ pub struct NeighborSlice {
 }
 
 impl NeighborSlice {
-    fn read_from(&self, grid: &Grid) -> [Color; 3] {
+    pub fn read_from(&self, grid: &Grid) -> [Color; 3] {
         let face = &grid.faces[self.side.idx()];
         match self.slice_type {
             SliceType::TOP => {
@@ -91,41 +91,7 @@ impl NeighborSlice {
             },
         }
     }
-
-    pub fn read_from_render_ready(&self, grid: &Grid) -> [Color; 3] {
-        let face = &grid.faces[self.side.idx()];
-        match self.slice_type {
-            SliceType::TOP => {
-                [
-                    face.grid[0][0],
-                    face.grid[0][1],
-                    face.grid[0][2],
-                ]
-            },
-            SliceType::BOTTOM => {
-                [
-                    face.grid[2][2],
-                    face.grid[2][1],
-                    face.grid[2][0],
-                ]
-            },
-            SliceType::LEFT => {
-                [
-                    face.grid[0][0],
-                    face.grid[1][0],
-                    face.grid[2][0],
-                ]
-            },
-            SliceType::RIGHT => {
-                [
-                    face.grid[0][2],
-                    face.grid[1][2],
-                    face.grid[2][2],
-                ]
-            },
-        }
-    }
-
+    
     fn write_to(&self, grid: &mut Grid, colors: [Color; 3]) {
         let face = &mut grid.faces[self.side.idx()];
         match self.slice_type {
@@ -305,7 +271,6 @@ impl Grid {
     }
 
     fn rotate_buffers(buffers: &mut Vec<[Color; 3]>, grid_side: &GridSide, direction: MoveDirection) {
-        
         match grid_side {
             GridSide::LEFT 
                 | GridSide::TOP
@@ -315,7 +280,6 @@ impl Grid {
                 MoveDirection::Double => buffers.rotate_right(2),
             }
             _ => match direction {
-                
                 MoveDirection::Clockwise => buffers.rotate_left(1),
                 MoveDirection::CounterClockwise => buffers.rotate_right(1),
                 MoveDirection::Double => buffers.rotate_right(2),

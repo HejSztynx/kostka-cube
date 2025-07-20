@@ -253,7 +253,7 @@ impl <'a> CubeSliceBuilder<'a> {
         // neighbors_1.rotate_right(1);
         let neighbors_1_colors: Vec<[Color; 3]> = neighbors_1.iter()
             .map(|ns| {
-                let mut res = ns.read_from_render_ready(grid);
+                let mut res = ns.read_from(grid);
                 // res.reverse();
                 res
             })
@@ -266,7 +266,7 @@ impl <'a> CubeSliceBuilder<'a> {
         
         let neighbors_2 = grid.get_neighbors(self.face_2);
         let mut neighbors_2_colors: Vec<[Color; 3]> = neighbors_2.iter()
-            .map(|ns| ns.read_from_render_ready(grid))
+            .map(|ns| ns.read_from(grid))
             // .rev()
             .collect();
         // neighbors_2_colors.swap(1, 3);
