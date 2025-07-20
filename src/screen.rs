@@ -32,7 +32,7 @@ impl AnyFace {
 pub trait Renderable {
     fn get_visible_faces(&self) -> Vec<AnyFace>;
 
-    fn avg_z(&self) -> f32;
+    fn dist(&self) -> f32;
 }
 
 pub struct Screen {
@@ -129,7 +129,7 @@ impl Screen {
     }
 
     pub fn render(&mut self, mut renderables: Vec<&dyn Renderable>) {
-        renderables.sort_by(|a, b| a.avg_z().partial_cmp(&b.avg_z()).unwrap());
+        renderables.sort_by(|a, b| a.dist().partial_cmp(&b.dist()).unwrap());
 
         for renderable in renderables.into_iter().rev() {
             let faces = renderable.get_visible_faces();

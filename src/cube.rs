@@ -165,7 +165,7 @@ impl Renderable for Cube {
         faces_clone
     }
 
-    fn avg_z(&self) -> f32 {
+    fn dist(&self) -> f32 {
         let mut sum = 0.0;
         for face in &self.faces {
             sum += face.avg_z();

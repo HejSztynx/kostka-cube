@@ -6,6 +6,8 @@ use crate::{
     screen::{AnyFace, Renderable}
 };
 
+const Y_TIEBREAKER_WEIGHT: f32 = 0.001;
+
 #[derive(Clone)]
 pub struct FaceSlice {
     corners: [Point3D; 4],
@@ -23,6 +25,10 @@ impl FaceSlice {
         };
 
         FaceSlice { corners, markers, colors }
+    }
+
+    fn avg_y(&self) -> f32 {
+        (self.corners[0].y.abs() + self.corners[1].y.abs() + self.corners[2].y.abs() + self.corners[3].y.abs()) / 4.0
     }
 
     pub fn avg_z(&self) -> f32 {
@@ -232,7 +238,7 @@ impl Renderable for CubeSlice {
         faces
     }
 
-    fn avg_z(&self) -> f32 {
+    fn dist(&self) -> f32 {
         let mut sum = 0.0;
         
         sum += self.face_1.avg_z();
@@ -240,6 +246,7 @@ impl Renderable for CubeSlice {
 
         for fs in &self.face_slices {
             sum += fs.avg_z();
+            sum += fs.avg_y() * Y_TIEBREAKER_WEIGHT; // secret sauce
         }
 
         sum / 6.0
