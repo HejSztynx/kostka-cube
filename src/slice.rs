@@ -24,8 +24,6 @@ impl FaceSlice {
     }
 }
 
-
-
 pub struct CubeMove {
     pub axis: Axis,
     pub grid_side: GridSide,
@@ -179,6 +177,35 @@ impl CubeSlice {
                         color.reverse();
                     }
                 }
+            }
+        }
+    }
+
+    pub fn rotate_around_own_axis(&mut self, angle_rad: f32) {
+        let center1 = self.face_1.center();
+        let center2 = self.face_2.center();
+        let axis = center2.subtract(&center1);
+
+        for p in &mut self.face_1.corners {
+            *p = p.rotate_around_axis(axis, center1, angle_rad);
+        }
+        for p in &mut self.face_1.markers {
+            *p = p.rotate_around_axis(axis, center1, angle_rad);
+        }
+
+        for p in &mut self.face_2.corners {
+            *p = p.rotate_around_axis(axis, center1, angle_rad);
+        }
+        for p in &mut self.face_2.markers {
+            *p = p.rotate_around_axis(axis, center1, angle_rad);
+        }
+
+        for slice in &mut self.face_slices {
+            for p in &mut slice.corners {
+                *p = p.rotate_around_axis(axis, center1, angle_rad);
+            }
+            for p in &mut slice.markers {
+                *p = p.rotate_around_axis(axis, center1, angle_rad);
             }
         }
     }

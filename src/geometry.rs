@@ -35,6 +35,43 @@ impl Point3D {
             z: scalar * self.z, 
         }
     }
+
+    pub fn rotate_around_axis(&self, axis: Point3D, origin: Point3D, angle_rad: f32) -> Point3D {
+        let axis = axis.normalize(); // oś musi być jednostkowa
+        let v = self.subtract(&origin); // przesuń względem początku
+        let cos = angle_rad.cos();
+        let sin = angle_rad.sin();
+
+        let dot = v.dot(&axis);
+        let cross = v.cross(&axis);
+
+        let rotated = v.scalar_multiply(cos)
+            .add(&cross.scalar_multiply(sin))
+            .add(&axis.scalar_multiply(dot * (1.0 - cos)));
+
+        rotated.add(&origin)
+    }
+
+    pub fn dot(&self, other: &Point3D) -> f32 {
+        self.x * other.x + self.y * other.y + self.z * other.z
+    }
+
+    pub fn cross(&self, other: &Point3D) -> Point3D {
+        Point3D {
+            x: self.y * other.z - self.z * other.y,
+            y: self.z * other.x - self.x * other.z,
+            z: self.x * other.y - self.y * other.x,
+        }
+    }
+
+    pub fn normalize(&self) -> Point3D {
+        let len = (self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
+        Point3D {
+            x: self.x / len,
+            y: self.y / len,
+            z: self.z / len,
+        }
+    }
 }
 
 pub struct Triangle (

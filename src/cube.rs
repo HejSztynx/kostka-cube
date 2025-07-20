@@ -64,6 +64,20 @@ impl Face {
         }
     }
 
+    pub fn center(&self) -> Point3D {
+        let mut sum = Point3D { x: 0.0, y: 0.0, z: 0.0 };
+        for p in &self.corners {
+            sum.x += p.x;
+            sum.y += p.y;
+            sum.z += p.z;
+        }
+        Point3D {
+            x: sum.x / 4.0,
+            y: sum.y / 4.0,
+            z: sum.z / 4.0,
+        }
+    }
+
     pub fn avg_z(&self) -> f32 {
         (self.corners[0].z + self.corners[1].z + self.corners[2].z + self.corners[3].z) / 4.0
     }

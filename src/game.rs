@@ -1,11 +1,12 @@
-use crate::cube::Cube;
+use crate::{cube::Cube, grid::MoveDirection};
 use crate::grid::Grid;
 use crate::screen::Screen;
-use crate::slice::CubeMove;
+use crate::slice::{CubeMove, CubeSliceOrder};
 use crate::scramble::scramble;
 
 use core::f32;
 use std::io::{self, Write};
+use std::time::Duration;
 
 const X_INIT: f32 = 0.0;
 const Y_INIT: f32 = 0.0;
@@ -47,11 +48,8 @@ fn start(grid: &mut Grid) {
             "d" => angle_y -= angle_unit,
             "w" => angle_x += angle_unit,
             "s" => angle_x -= angle_unit,
-            _ => match make_move(input, grid, &mut screen, &mut cube) {
-                Ok(_) => {
-                    
-                }
-                Err(err) => {
+            _ => {
+                if let Err(err) = make_move(input, grid, &mut screen, &mut cube) {
                     println!("{}", err);
                     let _ = io::stdin().read_line(&mut String::new());
                     screen.clear_screen(); 
@@ -61,16 +59,47 @@ fn start(grid: &mut Grid) {
     }
 }
 
+fn get_angle_diff(no_steps: i32, cube_move: &CubeMove) -> f32 {
+    let mut angle_diff = f32::consts::FRAC_PI_2 / (no_steps as f32);
+
+    if let MoveDirection::CounterClockwise = cube_move.direction {
+        angle_diff *= -1.0;
+    }
+
+    if let CubeSliceOrder::LAST = cube_move.order {
+        angle_diff *= -1.0;
+    }
+
+    if let MoveDirection::Double = cube_move.direction {
+        angle_diff *= 2.0;
+    }
+
+    angle_diff
+}
+
 fn make_move(input: &str, grid: &mut Grid, screen: &mut Screen, cube: &mut Cube) -> Result<(), String> {
     let cube_move = CubeMove::from_str(input)?;
     
-    let slices = cube.create_cube_slices(grid, &cube_move.axis);
-    let slice_to_render = &slices[cube_move.order.idx()];
+    let mut slices = cube.create_cube_slices(grid, &cube_move.axis);
+    let slice_to_render = &mut slices[cube_move.order.idx()];
+
+    let no_steps = 8;
+    let angle_diff = get_angle_diff(no_steps, &cube_move);
 
     screen.render(slice_to_render);
     screen.print_screen();
-    let _ = io::stdin().read_line(&mut String::new());
+    std::thread::sleep(Duration::from_millis(50));
     screen.clear_screen();
+
+    for _ in 0..no_steps {
+        slice_to_render.rotate_around_own_axis(angle_diff);
+
+        screen.render(slice_to_render);
+        screen.print_screen();
+        std::thread::sleep(Duration::from_millis(50));
+        screen.clear_screen();
+    }
+
 
     grid.apply_move(cube_move);
 

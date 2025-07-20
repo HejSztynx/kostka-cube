@@ -1,9 +1,9 @@
 use std::io::{self, Write};
 
-use crate::slice::{CubeSlice, FaceSlice};
+use crate::slice::FaceSlice;
 
 use super::geometry::{Point2D, Point3D, Triangle};
-use super::cube::{Color, Cube, Face};
+use super::cube::{Color, Face};
 
 const SCREEN_X: usize = 70;
 const SCREEN_Y: usize = 45;
