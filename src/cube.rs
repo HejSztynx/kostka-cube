@@ -83,10 +83,7 @@ impl Cube {
     pub fn update_side_map(&mut self) {
         let mut side_map = HashMap::new();
 
-        // let original_rot_y = self.rotation_y;
-        // let original_rot_x = self.rotation_x;
-
-        self.rotation_x += TIEBRAKER_ROTATION;
+        self.rotation_x -= TIEBRAKER_ROTATION;
         self.rotation_y += TIEBRAKER_ROTATION;
         self.apply_rotation();
 
@@ -113,13 +110,19 @@ impl Cube {
             side_map.insert(side, actual_side);
         }
 
-        self.rotation_x -= TIEBRAKER_ROTATION;
+        self.rotation_x += TIEBRAKER_ROTATION;
         self.rotation_y -= TIEBRAKER_ROTATION;
 
         self.apply_rotation();
-        // self.rotation_y = original_rot_y;
-        // self.rotation_x = original_rot_x;
         self.side_map = side_map;
+    }
+
+    pub fn rotate_y(&mut self, angle: f32) {
+        self.rotation_y += angle;
+    }
+
+    pub fn rotate_x(&mut self, angle: f32) {
+        self.rotation_x += angle;
     }
 
     fn apply_rotation(&mut self) {
