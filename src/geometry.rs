@@ -72,6 +72,25 @@ impl Point3D {
             z: self.z / len,
         }
     }
+
+    pub fn snap(&self) -> Point3D {
+        const EPSILON: f32 = 1e-4;
+
+        fn snap_coord(value: f32) -> f32 {
+            let nearest = value.round();
+            if (value - nearest).abs() < EPSILON {
+                nearest
+            } else {
+                value
+            }
+        }
+
+        Point3D {
+            x: snap_coord(self.x),
+            y: snap_coord(self.y),
+            z: snap_coord(self.z),
+        }
+    }
 }
 
 pub struct Triangle (
@@ -126,3 +145,17 @@ impl Point3D {
     }
 }
 
+pub fn snap_rotation(mut angle: f32) -> f32 {
+    const TAU: f32 = core::f32::consts::PI * 2.0;
+    const EPSILON: f32 = 1e-4;
+
+    if angle < 0.0 {
+        angle += TAU;
+    }
+
+    if (angle - TAU).abs() < EPSILON {
+        angle = 0.0;
+    }
+
+    angle
+}

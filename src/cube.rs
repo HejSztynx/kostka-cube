@@ -2,11 +2,7 @@ use core::f32;
 use std::collections::HashMap;
 
 use crate::{
-    cube_utils::{Axis, Color},
-    grid::{Grid, GridFace, GridSide, NeighborSlice},
-    screen::{AnyFace, Renderable},
-    slice::{CubeSlice, CubeSliceOrder},
-    geometry::Point3D,
+    cube_utils::{Axis, Color}, geometry::{snap_rotation, Point3D}, grid::{Grid, GridFace, GridSide, NeighborSlice}, screen::{AnyFace, Renderable}, slice::{CubeSlice, CubeSliceOrder}
 };
 
 const CUBE_SIZE: f32 = 2.0;
@@ -118,11 +114,11 @@ impl Cube {
     }
 
     pub fn rotate_y(&mut self, angle: f32) {
-        self.rotation_y += angle;
+        self.rotation_y = snap_rotation(self.rotation_y + angle);
     }
 
     pub fn rotate_x(&mut self, angle: f32) {
-        self.rotation_x += angle;
+        self.rotation_x = snap_rotation(self.rotation_x + angle);
     }
 
     fn apply_rotation(&mut self) {
@@ -165,7 +161,7 @@ impl Cube {
     fn transformed_corners(&self) -> Vec<Point3D> {
         self.initial_corners()
             .into_iter()
-            .map(|p| p.rotate_y(self.rotation_y).rotate_x(self.rotation_x).translate(self.position))
+            .map(|p| p.rotate_y(self.rotation_y).rotate_x(self.rotation_x).translate(self.position).snap())
             .collect()
     }
 
