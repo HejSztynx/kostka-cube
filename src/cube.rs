@@ -1,4 +1,5 @@
 use core::f32;
+use std::collections::HashMap;
 
 use crate::{
     cube_utils::{Axis, Color},
@@ -9,6 +10,7 @@ use crate::{
 };
 
 const CUBE_SIZE: f32 = 2.0;
+const TIEBRAKER_ROTATION: f32 = 0.015625;
 
 #[derive(Clone)]
 pub struct Face {
@@ -61,30 +63,85 @@ pub struct Cube {
     rotation_y: f32,
     rotation_x: f32,
     faces: Vec<Face>,
+    side_map: HashMap<GridSide, GridSide>,
 }
 
 impl Cube {
     pub fn new(position: (f32, f32, f32), rotation_y: f32, rotation_x: f32) -> Cube {
         let (x, y, z) = position;
-        Cube {
+        let mut cube = Cube {
             position: Point3D {x, y, z},
             rotation_y,
             rotation_x,
             faces: vec![],
-        }
+            side_map: HashMap::new(),
+        };
+        cube.update_side_map();
+        cube
     }
 
-    pub fn apply_grid(&mut self, grid: &Grid) {
+    pub fn update_side_map(&mut self) {
+        let mut side_map = HashMap::new();
+
+        // let original_rot_y = self.rotation_y;
+        // let original_rot_x = self.rotation_x;
+
+        self.rotation_x += TIEBRAKER_ROTATION;
+        self.rotation_y += TIEBRAKER_ROTATION;
+        self.apply_rotation();
+
+        for &side in &[GridSide::RIGHT, GridSide::LEFT, GridSide::TOP, GridSide::BOTTOM, GridSide::FRONT, GridSide::BACK] {
+            let (best_face_idx, _) = self.faces
+                .iter()
+                .enumerate()
+                .map(|(i, face)| {
+                    let center = face.center();
+                    let value = match side {
+                        GridSide::RIGHT => center.x,
+                        GridSide::LEFT => -center.x,
+                        GridSide::TOP => center.y,
+                        GridSide::BOTTOM => -center.y,
+                        GridSide::FRONT => -center.z,
+                        GridSide::BACK => center.z,
+                    };
+                    (i, value)
+                })
+                .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
+                .unwrap();
+
+            let actual_side = GridSide::from_idx(best_face_idx);
+            side_map.insert(side, actual_side);
+        }
+
+        self.rotation_x -= TIEBRAKER_ROTATION;
+        self.rotation_y -= TIEBRAKER_ROTATION;
+
+        self.apply_rotation();
+        // self.rotation_y = original_rot_y;
+        // self.rotation_x = original_rot_x;
+        self.side_map = side_map;
+    }
+
+    fn apply_rotation(&mut self) {
         let corners: Vec<Point3D> = self.transformed_corners();
 
         self.faces = vec![
-            Face::new([corners[2], corners[3], corners[0], corners[1]], grid.faces[0].clone()),
-            Face::new([corners[2], corners[1], corners[5], corners[6]], grid.faces[1].clone()),
-            Face::new([corners[1], corners[0], corners[4], corners[5]], grid.faces[2].clone()),
-            Face::new([corners[0], corners[3], corners[7], corners[4]], grid.faces[3].clone()),
-            Face::new([corners[3], corners[2], corners[6], corners[7]], grid.faces[4].clone()),
-            Face::new([corners[5], corners[4], corners[7], corners[6]], grid.faces[5].clone()),
+            Face::new([corners[2], corners[3], corners[0], corners[1]], GridFace::empty()),
+            Face::new([corners[2], corners[1], corners[5], corners[6]], GridFace::empty()),
+            Face::new([corners[1], corners[0], corners[4], corners[5]], GridFace::empty()),
+            Face::new([corners[0], corners[3], corners[7], corners[4]], GridFace::empty()),
+            Face::new([corners[3], corners[2], corners[6], corners[7]], GridFace::empty()),
+            Face::new([corners[5], corners[4], corners[7], corners[6]], GridFace::empty()),
         ];
+    }
+
+    pub fn apply_grid(&mut self, grid: &Grid) {
+        self.faces[0].grid_face = grid.faces[0].clone();
+        self.faces[1].grid_face = grid.faces[1].clone();
+        self.faces[2].grid_face = grid.faces[2].clone();
+        self.faces[3].grid_face = grid.faces[3].clone();
+        self.faces[4].grid_face = grid.faces[4].clone();
+        self.faces[5].grid_face = grid.faces[5].clone();
     }
 
     fn initial_corners(&self) -> [Point3D; 8] {
@@ -109,32 +166,8 @@ impl Cube {
             .collect()
     }
 
-    fn get_rotate_fn(rotation: f32) -> Box<dyn Fn(GridSide, &Axis) -> GridSide> {
-        if rotation > 0.0 {
-            Box::new(|s, axis| s.next(axis))
-        } else {
-            Box::new(|s, axis| s.prev(axis))
-        }
-    }
-
-    fn translate_single_axis(&self, side: GridSide, rotation: f32, axis: Axis) -> GridSide {
-        let rotate_fn = Cube::get_rotate_fn(rotation);
-                
-        let mut rotation = rotation.abs();
-
-        let mut translated_side = side;
-        while rotation - f32::consts::FRAC_PI_4 > 0.0 {
-            rotation -= f32::consts::FRAC_PI_2;
-            translated_side = rotate_fn(translated_side, &axis);
-        }
-
-        translated_side
-    }
-
     pub fn translate_side(&self, side: GridSide) -> GridSide {
-        let side = self.translate_single_axis(side, self.rotation_y, Axis::Y);
-
-        side
+        self.side_map.get(&side).unwrap().clone()
     }
 
     pub fn create_cube_slices(&self, grid: &Grid, axis: &Axis) -> [CubeSlice; 3] {

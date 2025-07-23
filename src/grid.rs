@@ -12,7 +12,7 @@ pub enum MoveDirection {
     Double,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GridSide {
     TOP,
     FRONT,
@@ -31,6 +31,18 @@ impl GridSide {
             GridSide::RIGHT => 3,
             GridSide::BACK => 4,
             GridSide::BOTTOM => 5,
+        }
+    }
+
+    pub fn from_idx(idx: usize) -> GridSide {
+        match idx {
+            0 => GridSide::TOP,
+            1 => GridSide::LEFT,
+            2 => GridSide::FRONT,
+            3 => GridSide::RIGHT,
+            4 => GridSide::BACK,
+            5 => GridSide::BOTTOM,
+            _ => panic!(),
         }
     }
 
@@ -55,43 +67,6 @@ impl GridSide {
             GridSide::BOTTOM => CubeSliceOrder::LAST,
         }
     }
-
-    pub fn next(self, axis: &Axis) -> GridSide {
-        match axis {
-            Axis::X => panic!(),
-            Axis::Y => self.next_y(),
-            Axis::Z => panic!(),
-        }
-    }
-
-    pub fn prev(self, axis: &Axis) -> GridSide {
-        match axis {
-            Axis::X => panic!(),
-            Axis::Y => self.prev_y(),
-            Axis::Z => panic!(),
-        }
-    }
-
-    pub fn next_y(self) -> GridSide {
-        match self {
-            GridSide::FRONT => GridSide::RIGHT,
-            GridSide::LEFT => GridSide::FRONT,
-            GridSide::BACK => GridSide::LEFT,
-            GridSide::RIGHT => GridSide::BACK,
-            _ => panic!(),
-        }
-    }
-
-    pub fn prev_y(self) -> GridSide {
-        match self {
-            GridSide::FRONT => GridSide::LEFT,
-            GridSide::LEFT => GridSide::BACK,
-            GridSide::BACK => GridSide::RIGHT,
-            GridSide::RIGHT => GridSide::FRONT,
-            _ => panic!(),
-        }
-    }
-
 }
 
 enum SliceType {

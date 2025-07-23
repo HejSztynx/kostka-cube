@@ -27,6 +27,7 @@ fn start(grid: &mut Grid) {
     loop {
         let mut cube = Cube::new(position, angle_y, angle_x);
         
+        cube.update_side_map();
         cube.apply_grid(grid);
         screen.render(vec![&cube]);
         screen.print_screen();
