@@ -1,6 +1,6 @@
 use crate::{
-    cube_utils::{Color, Axis}, 
-    slice::CubeMove
+    cube_utils::{Axis, Color}, 
+    slice::{CubeMove, CubeSliceOrder}
 };
 
 const PRINT_CHAR: &str = "██";
@@ -44,6 +44,54 @@ impl GridSide {
             GridSide::BOTTOM => Axis::Y,
         }
     }
+
+    pub fn order(&self) -> CubeSliceOrder {
+        match self {
+            GridSide::TOP => CubeSliceOrder::FIRST,
+            GridSide::LEFT => CubeSliceOrder::FIRST,
+            GridSide::FRONT => CubeSliceOrder::FIRST,
+            GridSide::RIGHT => CubeSliceOrder::LAST,
+            GridSide::BACK => CubeSliceOrder::LAST,
+            GridSide::BOTTOM => CubeSliceOrder::LAST,
+        }
+    }
+
+    pub fn next(self, axis: &Axis) -> GridSide {
+        match axis {
+            Axis::X => panic!(),
+            Axis::Y => self.next_y(),
+            Axis::Z => panic!(),
+        }
+    }
+
+    pub fn prev(self, axis: &Axis) -> GridSide {
+        match axis {
+            Axis::X => panic!(),
+            Axis::Y => self.prev_y(),
+            Axis::Z => panic!(),
+        }
+    }
+
+    pub fn next_y(self) -> GridSide {
+        match self {
+            GridSide::FRONT => GridSide::RIGHT,
+            GridSide::LEFT => GridSide::FRONT,
+            GridSide::BACK => GridSide::LEFT,
+            GridSide::RIGHT => GridSide::BACK,
+            _ => panic!(),
+        }
+    }
+
+    pub fn prev_y(self) -> GridSide {
+        match self {
+            GridSide::FRONT => GridSide::LEFT,
+            GridSide::LEFT => GridSide::BACK,
+            GridSide::BACK => GridSide::RIGHT,
+            GridSide::RIGHT => GridSide::FRONT,
+            _ => panic!(),
+        }
+    }
+
 }
 
 enum SliceType {

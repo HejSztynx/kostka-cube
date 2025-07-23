@@ -44,16 +44,20 @@ pub struct CubeMove {
 }
 
 impl CubeMove {
-    pub fn from_str(mv: &str) -> Result<CubeMove, String> {
+    pub fn from_side(grid_side: GridSide, direction: MoveDirection) -> CubeMove {
+        CubeMove { axis: grid_side.axis(), grid_side, order: grid_side.order(), direction }
+    }
+
+    pub fn from_str(mv: &str) -> Result<(GridSide, MoveDirection), String> {
         let (side_char, suffix) = mv.split_at(1);
 
-        let (axis, grid_side, order) = match side_char {
-            "R" => (Axis::X, GridSide::RIGHT, CubeSliceOrder::LAST),
-            "L" => (Axis::X, GridSide::LEFT, CubeSliceOrder::FIRST),
-            "U" => (Axis::Y, GridSide::TOP, CubeSliceOrder::FIRST),
-            "D" => (Axis::Y, GridSide::BOTTOM, CubeSliceOrder::LAST),
-            "F" => (Axis::Z, GridSide::FRONT, CubeSliceOrder::FIRST),
-            "B" => (Axis::Z, GridSide::BACK, CubeSliceOrder::LAST),
+        let grid_side= match side_char {
+            "R" => GridSide::RIGHT,
+            "L" => GridSide::LEFT,
+            "U" => GridSide::TOP,
+            "D" => GridSide::BOTTOM,
+            "F" => GridSide::FRONT,
+            "B" => GridSide::BACK,
             _ => return Err(format!("Incorrect move '{}'", mv)),
         };
         let direction = match suffix {
@@ -63,7 +67,7 @@ impl CubeMove {
             _ => Err(format!("Incorrect move '{}'", mv)),
         }?;
 
-        Ok(CubeMove { axis, grid_side, order, direction })
+        Ok((grid_side, direction))
     }
 }
 

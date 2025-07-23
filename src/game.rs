@@ -78,7 +78,10 @@ fn get_angle_diff(no_steps: i32, cube_move: &CubeMove) -> f32 {
 }
 
 fn make_move(input: &str, grid: &mut Grid, screen: &mut Screen, cube: &mut Cube) -> Result<(), String> {
-    let cube_move = CubeMove::from_str(input)?;
+    let (side, direction) = CubeMove::from_str(input)?;
+
+    let translated_side = cube.translate_side(side);
+    let cube_move = CubeMove::from_side(translated_side, direction);
     
     let mut slices = cube.create_cube_slices(grid, &cube_move.axis);
     

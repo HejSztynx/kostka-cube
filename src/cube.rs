@@ -1,3 +1,5 @@
+use core::f32;
+
 use crate::{
     cube_utils::{Axis, Color},
     grid::{Grid, GridFace, GridSide, NeighborSlice},
@@ -105,6 +107,34 @@ impl Cube {
             .into_iter()
             .map(|p| p.rotate_y(self.rotation_y).rotate_x(self.rotation_x).translate(self.position))
             .collect()
+    }
+
+    fn get_rotate_fn(rotation: f32) -> Box<dyn Fn(GridSide, &Axis) -> GridSide> {
+        if rotation > 0.0 {
+            Box::new(|s, axis| s.next(axis))
+        } else {
+            Box::new(|s, axis| s.prev(axis))
+        }
+    }
+
+    fn translate_single_axis(&self, side: GridSide, rotation: f32, axis: Axis) -> GridSide {
+        let rotate_fn = Cube::get_rotate_fn(rotation);
+                
+        let mut rotation = rotation.abs();
+
+        let mut translated_side = side;
+        while rotation - f32::consts::FRAC_PI_4 > 0.0 {
+            rotation -= f32::consts::FRAC_PI_2;
+            translated_side = rotate_fn(translated_side, &axis);
+        }
+
+        translated_side
+    }
+
+    pub fn translate_side(&self, side: GridSide) -> GridSide {
+        let side = self.translate_single_axis(side, self.rotation_y, Axis::Y);
+
+        side
     }
 
     pub fn create_cube_slices(&self, grid: &Grid, axis: &Axis) -> [CubeSlice; 3] {
