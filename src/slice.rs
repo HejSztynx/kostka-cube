@@ -40,6 +40,7 @@ impl FaceSlice {
     }
 }
 
+#[derive(Debug)]
 pub struct CubeMove {
     pub axis: Axis,
     pub grid_side: GridSide,
@@ -56,13 +57,15 @@ impl CubeMove {
         let (side_char, suffix) = mv.split_at(1);
 
         let grid_side= match side_char {
-            "R" => GridSide::RIGHT,
-            "L" => GridSide::LEFT,
-            "U" => GridSide::TOP,
-            "D" => GridSide::BOTTOM,
-            "F" => GridSide::FRONT,
-            "B" => GridSide::BACK,
-            "M" => GridSide::MIDDLE,
+            "R" => GridSide::Right,
+            "L" => GridSide::Left,
+            "U" => GridSide::Top,
+            "D" => GridSide::Bottom,
+            "F" => GridSide::Front,
+            "B" => GridSide::Back,
+            "M" => GridSide::MiddleX,
+            "E" => GridSide::MiddleY,
+            "S" => GridSide::MiddleZ,
             _ => return Err(format!("Incorrect move '{}'", mv)),
         };
         let direction = match suffix {
@@ -76,6 +79,7 @@ impl CubeMove {
     }
 }
 
+#[derive(Debug)]
 pub enum CubeSliceOrder {
     FIRST,
     MIDDLE,

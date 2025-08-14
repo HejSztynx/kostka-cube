@@ -83,20 +83,19 @@ impl Cube {
         self.rotation_y += TIEBRAKER_ROTATION;
         self.apply_rotation();
 
-        for &side in &[GridSide::RIGHT, GridSide::LEFT, GridSide::TOP, GridSide::BOTTOM, GridSide::FRONT, GridSide::BACK] {
+        for &side in &[GridSide::Right, GridSide::Left, GridSide::Top, GridSide::Bottom, GridSide::Front, GridSide::Back] {
             let (best_face_idx, _) = self.faces
                 .iter()
                 .enumerate()
                 .map(|(i, face)| {
                     let center = face.center();
                     let value = match side {
-                        GridSide::RIGHT => center.x,
-                        GridSide::LEFT => -center.x,
-                        GridSide::TOP => center.y,
-                        GridSide::BOTTOM => -center.y,
-                        GridSide::FRONT => -center.z,
-                        GridSide::BACK => center.z,
-                        // GridSide::MIDDLE => -center.x,
+                        GridSide::Right => center.x,
+                        GridSide::Left => -center.x,
+                        GridSide::Top => center.y,
+                        GridSide::Bottom => -center.y,
+                        GridSide::Front => -center.z,
+                        GridSide::Back => center.z,
                         _ => panic!()
                     };
                     (i, value)
@@ -114,12 +113,6 @@ impl Cube {
         self.apply_rotation();
         self.side_map = side_map;
     }
-
-    // pub fn flip_if_needed(side: &GridSide, direction: MoveDirection) -> MoveDirection {
-    //     if side.is_middle() {
-
-    //     }
-    // }
 
     pub fn rotate_y(&mut self, angle: f32) {
         self.rotation_y = snap_rotation(self.rotation_y + angle);
@@ -178,11 +171,11 @@ impl Cube {
         let mut direction = cube_move.direction;
         let translated = self.side_map.get(&side.middle_layer_adjacent()).unwrap().clone();
         if side.is_middle() {
-            if translated.idx() != side.middle_layer_adjacent().idx() {
+            let translated_middle = GridSide::middle_layer_from_axis(&translated.axis());
+            if translated.idx() != translated_middle.middle_layer_adjacent().idx() {
                 direction = direction.flip();
             }
-            let translated = GridSide::middle_layer_from_axis(&translated.axis());
-            CubeMove::from_side(translated, direction)
+            CubeMove::from_side(translated_middle, direction)
         } else {
             CubeMove::from_side(translated, direction)
         }
@@ -193,41 +186,41 @@ impl Cube {
             Axis::X => CubeSliceBuilder {
                 cube: &self,
                 split_faces: (
-                    GridSide::TOP,
-                    GridSide::BOTTOM
+                    GridSide::Top,
+                    GridSide::Bottom
                 ),
                 idx_1: (13, 1),
                 idx_2: (13, 1),
                 idx_3: (2, 14),
                 idx_4: (2, 14),
-                face_1: GridSide::LEFT,
-                face_2: GridSide::RIGHT,
+                face_1: GridSide::Left,
+                face_2: GridSide::Right,
             },
             Axis::Y => CubeSliceBuilder {
                 cube: &self,
                 split_faces: (
-                    GridSide::BACK,
-                    GridSide::FRONT
+                    GridSide::Back,
+                    GridSide::Front
                 ),
                 idx_1: (4, 7),
                 idx_2: (4, 7),
                 idx_3: (11, 8),
                 idx_4: (11, 8),
-                face_1: GridSide::TOP,
-                face_2: GridSide::BOTTOM,
+                face_1: GridSide::Top,
+                face_2: GridSide::Bottom,
             },
             Axis::Z => CubeSliceBuilder {
                 cube: &self,
                 split_faces: (
-                    GridSide::TOP,
-                    GridSide::BOTTOM
+                    GridSide::Top,
+                    GridSide::Bottom
                 ),
                 idx_1: (11, 8),
                 idx_2: (4, 7),
                 idx_3: (4, 7),
                 idx_4: (11, 8),
-                face_1: GridSide::FRONT,
-                face_2: GridSide::BACK,
+                face_1: GridSide::Front,
+                face_2: GridSide::Back,
             },
         };
 

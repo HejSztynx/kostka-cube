@@ -25,7 +25,7 @@ impl Color {
     }
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Axis {
     X,
     Y,

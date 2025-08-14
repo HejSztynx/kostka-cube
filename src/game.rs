@@ -1,5 +1,5 @@
 use crate::{cube::Cube, grid::MoveDirection};
-use crate::grid::Grid;
+use crate::grid::{Grid, GridSide};
 use crate::screen::{Renderable, Screen};
 use crate::slice::{CubeMove, CubeSlice, CubeSliceOrder};
 use crate::scramble::scramble;
@@ -98,6 +98,10 @@ impl Game {
         if let MoveDirection::Double = cube_move.direction {
             angle_diff *= 2.0;
         }
+
+        if let GridSide::MiddleY = cube_move.grid_side {
+            angle_diff *= -1.0;
+        }
         
         angle_diff
     }
@@ -105,6 +109,11 @@ impl Game {
     fn make_move(&mut self, input: &str) -> Result<(), String> {
         let cube_move = self.parse_and_translate_move(input)?;
         
+        print!("Translated move - {:?}", cube_move);
+        io::stdout().flush().unwrap();
+
+        std::thread::sleep(Duration::from_millis(2000));
+
         let mut slices = self.cube.create_cube_slices(&self.grid, &cube_move.axis);
         self.animate_rotation(&mut slices, &cube_move);
         

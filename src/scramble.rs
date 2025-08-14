@@ -67,12 +67,12 @@ fn apply_scramble(grid: &mut Grid, moves: Vec<&Move>) {
     for mv in moves {
         let (side_char, suffix) = mv.mv.split_at(1);
         let side = match side_char {
-            "R" => GridSide::RIGHT,
-            "L" => GridSide::LEFT,
-            "U" => GridSide::TOP,
-            "D" => GridSide::BOTTOM,
-            "F" => GridSide::FRONT,
-            "B" => GridSide::BACK,
+            "R" => GridSide::Right,
+            "L" => GridSide::Left,
+            "U" => GridSide::Top,
+            "D" => GridSide::Bottom,
+            "F" => GridSide::Front,
+            "B" => GridSide::Back,
             _ => continue,
         };
         let direction = match suffix {
