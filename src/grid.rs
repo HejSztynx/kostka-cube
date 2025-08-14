@@ -12,6 +12,16 @@ pub enum MoveDirection {
     Double,
 }
 
+impl MoveDirection {
+    pub fn flip(self) -> MoveDirection {
+        match self {
+            Self::Clockwise => Self::CounterClockwise,
+            Self::CounterClockwise => Self::Clockwise,
+            Self::Double => Self::Double,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GridSide {
     TOP,
@@ -20,6 +30,7 @@ pub enum GridSide {
     LEFT,
     RIGHT,
     BACK,
+    MIDDLE,
 }
 
 impl GridSide {
@@ -31,6 +42,7 @@ impl GridSide {
             GridSide::RIGHT => 3,
             GridSide::BACK => 4,
             GridSide::BOTTOM => 5,
+            _ => panic!()
         }
     }
 
@@ -46,6 +58,14 @@ impl GridSide {
         }
     }
 
+    pub fn middle_layer_from_axis(axis: &Axis) -> GridSide {
+        match axis {
+            Axis::X => GridSide::MIDDLE,
+            Axis::Y => panic!(),
+            Axis::Z => panic!()
+        }
+    }
+
     pub fn axis(&self) -> Axis {
         match self {
             GridSide::TOP => Axis::Y,
@@ -54,6 +74,7 @@ impl GridSide {
             GridSide::RIGHT => Axis::X,
             GridSide::BACK => Axis::Z,
             GridSide::BOTTOM => Axis::Y,
+            GridSide::MIDDLE => Axis::X,
         }
     }
 
@@ -65,6 +86,21 @@ impl GridSide {
             GridSide::RIGHT => CubeSliceOrder::LAST,
             GridSide::BACK => CubeSliceOrder::LAST,
             GridSide::BOTTOM => CubeSliceOrder::LAST,
+            GridSide::MIDDLE => CubeSliceOrder::MIDDLE,
+        }
+    }
+
+    pub fn is_middle(&self) -> bool {
+        match self {
+            GridSide::MIDDLE => true,
+            _ => false
+        }
+    }
+
+    pub fn middle_layer_adjacent(self) -> GridSide {
+        match self {
+            GridSide::MIDDLE => GridSide::LEFT,
+            _ => self
         }
     }
 }
@@ -303,7 +339,8 @@ impl Grid {
         match grid_side {
             GridSide::LEFT 
                 | GridSide::TOP
-                | GridSide::FRONT => match direction {
+                | GridSide::FRONT
+                | GridSide::MIDDLE => match direction {
                 MoveDirection::Clockwise => buffers.rotate_right(1),
                 MoveDirection::CounterClockwise => buffers.rotate_left(1),
                 MoveDirection::Double => buffers.rotate_right(2),
@@ -318,8 +355,11 @@ impl Grid {
     }
 
     pub fn move_face(&mut self, side: GridSide, direction: MoveDirection) {
-        let idx = side.idx();
-        self.faces[idx].rotate(&direction);
+        if !side.is_middle() {
+            let idx = side.idx();
+            self.faces[idx].rotate(&direction);
+        }
+
         let neighbors = self.get_neighbors(side);
         let mut buffers: Vec<[Color; 3]> = neighbors.iter()
             .map(|ns| {
@@ -333,30 +373,6 @@ impl Grid {
         for (slice, colors) in neighbors.into_iter().zip(buffers) {
             slice.write_to(self, colors);
         }        
-    }
-
-    pub fn get_middle_slices(&self, axis: &Axis) -> [NeighborSlice; 4] {
-        match axis {
-            Axis::X => [
-                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::TOP},
-                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::FRONT},
-                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::BOTTOM},
-                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::BACK},
-            ],
-            Axis::Y => [
-                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::BACK},
-                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::RIGHT},
-                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::FRONT},
-                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::LEFT},
-            ],
-            Axis::Z => [
-                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::TOP},
-                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::RIGHT},
-                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::BOTTOM},
-                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::LEFT},
-            ],
-            
-        }
     }
 
     pub fn get_neighbors(&self, side: GridSide) -> [NeighborSlice; 4] {
@@ -396,6 +412,24 @@ impl Grid {
                 NeighborSlice {slice_type: SliceType::RIGHT, side: GridSide::RIGHT},
                 NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::BOTTOM},
                 NeighborSlice {slice_type: SliceType::LEFT, side: GridSide::LEFT},
+            ],
+            GridSide::MIDDLE => [
+                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::TOP},
+                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::FRONT},
+                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::BOTTOM},
+                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::BACK},
+            ],
+            _ => [
+                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::BACK},
+                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::RIGHT},
+                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::FRONT},
+                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::LEFT},
+            ],
+            _ => [
+                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::TOP},
+                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::RIGHT},
+                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::BOTTOM},
+                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::LEFT},
             ],
         }
     }

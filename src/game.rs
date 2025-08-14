@@ -114,8 +114,9 @@ impl Game {
 
     fn parse_and_translate_move(&self, input: &str) -> Result<CubeMove, String> {
         let (side, direction) = CubeMove::from_str(input)?;
-        let translated_side = self.cube.translate_side(side);
-        Ok(CubeMove::from_side(translated_side, direction))
+        let cube_move = CubeMove::from_side(side, direction);
+        let translated_move = self.cube.translate_move(cube_move);
+        Ok(translated_move)
     }
 
     fn render_once(&mut self, slices: &[CubeSlice; 3]) {
@@ -130,7 +131,7 @@ impl Game {
     }
 
     fn animate_rotation(&mut self, slices: &mut [CubeSlice; 3], cube_move: &CubeMove) {
-        let angle_diff = Game::get_angle_diff( cube_move);
+        let angle_diff = Game::get_angle_diff(cube_move);
         
         self.render_once(slices);
         

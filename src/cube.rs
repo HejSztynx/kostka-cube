@@ -2,7 +2,7 @@ use core::f32;
 use std::collections::HashMap;
 
 use crate::{
-    cube_utils::{Axis, Color}, geometry::{snap_rotation, Point3D}, grid::{Grid, GridFace, GridSide, NeighborSlice}, screen::{AnyFace, Renderable}, slice::{CubeSlice, CubeSliceOrder}
+    cube_utils::{Axis, Color}, geometry::{snap_rotation, Point3D}, grid::{Grid, GridFace, GridSide, NeighborSlice}, screen::{AnyFace, Renderable}, slice::{CubeMove, CubeSlice, CubeSliceOrder}
 };
 
 const CUBE_SIZE: f32 = 2.0;
@@ -96,6 +96,8 @@ impl Cube {
                         GridSide::BOTTOM => -center.y,
                         GridSide::FRONT => -center.z,
                         GridSide::BACK => center.z,
+                        // GridSide::MIDDLE => -center.x,
+                        _ => panic!()
                     };
                     (i, value)
                 })
@@ -112,6 +114,12 @@ impl Cube {
         self.apply_rotation();
         self.side_map = side_map;
     }
+
+    // pub fn flip_if_needed(side: &GridSide, direction: MoveDirection) -> MoveDirection {
+    //     if side.is_middle() {
+
+    //     }
+    // }
 
     pub fn rotate_y(&mut self, angle: f32) {
         self.rotation_y = snap_rotation(self.rotation_y + angle);
@@ -165,8 +173,19 @@ impl Cube {
             .collect()
     }
 
-    pub fn translate_side(&self, side: GridSide) -> GridSide {
-        self.side_map.get(&side).unwrap().clone()
+    pub fn translate_move(&self, cube_move: CubeMove) -> CubeMove {
+        let side = cube_move.grid_side;
+        let mut direction = cube_move.direction;
+        let translated = self.side_map.get(&side.middle_layer_adjacent()).unwrap().clone();
+        if side.is_middle() {
+            if translated.idx() != side.middle_layer_adjacent().idx() {
+                direction = direction.flip();
+            }
+            let translated = GridSide::middle_layer_from_axis(&translated.axis());
+            CubeMove::from_side(translated, direction)
+        } else {
+            CubeMove::from_side(translated, direction)
+        }
     }
 
     pub fn create_cube_slices(&self, grid: &Grid, axis: &Axis) -> [CubeSlice; 3] {
@@ -272,7 +291,7 @@ impl <'a> CubeSliceBuilder<'a> {
         let neighbors_1 = grid.get_neighbors(self.face_1);
         let neighbors_1_colors: Vec<[Color; 3]> = self.get_slices_colors(neighbors_1, grid);
         
-        let middles = grid.get_middle_slices(axis);
+        let middles = grid.get_neighbors(GridSide::middle_layer_from_axis(axis));
         let middles_colors: Vec<[Color; 3]> = self.get_slices_colors(middles, grid);
 
         let neighbors_2 = grid.get_neighbors(self.face_2);

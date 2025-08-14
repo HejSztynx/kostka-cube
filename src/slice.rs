@@ -62,6 +62,7 @@ impl CubeMove {
             "D" => GridSide::BOTTOM,
             "F" => GridSide::FRONT,
             "B" => GridSide::BACK,
+            "M" => GridSide::MIDDLE,
             _ => return Err(format!("Incorrect move '{}'", mv)),
         };
         let direction = match suffix {
