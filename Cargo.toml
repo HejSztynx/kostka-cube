@@ -1,7 +1,6 @@
-[package]
-name = "kostka"
-version = "0.1.0"
-edition = "2024"
+[workspace]
 
-[dependencies]
-rand = "0.8"
+members = [
+    "cube-core", 
+    "cube-tui"
+]

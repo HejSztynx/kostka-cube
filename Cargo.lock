@@ -9,6 +9,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9555578bc9e57714c812a1f84e4fc5b4d21fcb063490c624de019f7464c91268"
 
 [[package]]
+name = "cube-core"
+version = "0.1.0"
+dependencies = [
+ "rand",
+]
+
+[[package]]
+name = "cube-tui"
+version = "0.1.0"
+dependencies = [
+ "cube-core",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -17,13 +31,6 @@ dependencies = [
  "cfg-if",
  "libc",
  "wasi",
-]
-
-[[package]]
-name = "kostka"
-version = "0.1.0"
-dependencies = [
- "rand",
 ]
 
 [[package]]
