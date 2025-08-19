@@ -121,12 +121,14 @@ impl GridSide {
 }
 
 enum SliceType {
-    TOP,
-    BOTTOM,
-    LEFT,
-    RIGHT,
-    VERTICAL,
-    HORIZONTAL,
+    Top,
+    Bottom,
+    Left,
+    Right,
+    Vertical,
+    VerticalFlipped,
+    Horizontal,
+    HorizontalFlipped,
 }
 
 pub struct NeighborSlice {
@@ -138,46 +140,60 @@ impl NeighborSlice {
     pub fn read_from(&self, grid: &Grid) -> [Color; 3] {
         let face = &grid.faces[self.side.idx()];
         match self.slice_type {
-            SliceType::TOP => {
+            SliceType::Top => {
                 [
                     face.grid[0][0],
                     face.grid[0][1],
                     face.grid[0][2],
                 ]
             },
-            SliceType::BOTTOM => {
+            SliceType::Bottom => {
                 [
                     face.grid[2][2],
                     face.grid[2][1],
                     face.grid[2][0],
                 ]
             },
-            SliceType::LEFT => {
+            SliceType::Left => {
                 [
                     face.grid[2][0],
                     face.grid[1][0],
                     face.grid[0][0],
                 ]
             },
-            SliceType::RIGHT => {
+            SliceType::Right => {
                 [
                     face.grid[0][2],
                     face.grid[1][2],
                     face.grid[2][2],
                 ]
             },
-            SliceType::VERTICAL => {
+            SliceType::Vertical => {
                 [
                     face.grid[2][1],
                     face.grid[1][1],
                     face.grid[0][1],
                 ]
             },
-            SliceType::HORIZONTAL => {
+            SliceType::VerticalFlipped => {
+                [
+                    face.grid[0][1],
+                    face.grid[1][1],
+                    face.grid[2][1],
+                ]
+            },
+            SliceType::Horizontal => {
                 [
                     face.grid[1][0],
                     face.grid[1][1],
                     face.grid[1][2],
+                ]
+            },
+            SliceType::HorizontalFlipped => {
+                [
+                    face.grid[1][2],
+                    face.grid[1][1],
+                    face.grid[1][0],
                 ]
             },
         }
@@ -186,41 +202,51 @@ impl NeighborSlice {
     fn write_to(&self, grid: &mut Grid, colors: [Color; 3]) {
         let face = &mut grid.faces[self.side.idx()];
         match self.slice_type {
-            SliceType::TOP => {
+            SliceType::Top => {
                 face.grid[0][0] = colors[0];
                 face.grid[0][1] = colors[1];
                 face.grid[0][2] = colors[2];
             },
-            SliceType::BOTTOM => {
+            SliceType::Bottom => {
                 face.grid[2][2] = colors[0];
                 face.grid[2][1] = colors[1];
                 face.grid[2][0] = colors[2];
             },
-            SliceType::LEFT => {
+            SliceType::Left => {
                 face.grid[2][0] = colors[0];
                 face.grid[1][0] = colors[1];
                 face.grid[0][0] = colors[2];
             },
-            SliceType::RIGHT => {
+            SliceType::Right => {
                 face.grid[0][2] = colors[0];
                 face.grid[1][2] = colors[1];
                 face.grid[2][2] = colors[2];
             },
-            SliceType::VERTICAL => {
+            SliceType::Vertical => {
                 face.grid[2][1] = colors[0];
                 face.grid[1][1] = colors[1];
                 face.grid[0][1] = colors[2];
             },
-            SliceType::HORIZONTAL => {
+            SliceType::VerticalFlipped => {
+                face.grid[2][1] = colors[2];
+                face.grid[1][1] = colors[1];
+                face.grid[0][1] = colors[0];
+            },
+            SliceType::Horizontal => {
                 face.grid[1][0] = colors[0];
                 face.grid[1][1] = colors[1];
                 face.grid[1][2] = colors[2];
+            },
+            SliceType::HorizontalFlipped => {
+                face.grid[1][0] = colors[2];
+                face.grid[1][1] = colors[1];
+                face.grid[1][2] = colors[0];
             },
         }
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GridFace {
     pub grid: [[Color; 3]; 3],
 }
@@ -394,58 +420,58 @@ impl Grid {
     pub fn get_neighbors(&self, side: GridSide) -> [NeighborSlice; 4] {
         match side {
             GridSide::Top => [
-                NeighborSlice {slice_type: SliceType::TOP, side: GridSide::Back},
-                NeighborSlice {slice_type: SliceType::TOP, side: GridSide::Right},
-                NeighborSlice {slice_type: SliceType::TOP, side: GridSide::Front},
-                NeighborSlice {slice_type: SliceType::TOP, side: GridSide::Left},
+                NeighborSlice {slice_type: SliceType::Top, side: GridSide::Back},
+                NeighborSlice {slice_type: SliceType::Top, side: GridSide::Right},
+                NeighborSlice {slice_type: SliceType::Top, side: GridSide::Front},
+                NeighborSlice {slice_type: SliceType::Top, side: GridSide::Left},
             ],
             GridSide::Front => [
-                NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::Top},
-                NeighborSlice {slice_type: SliceType::LEFT, side: GridSide::Right},
-                NeighborSlice {slice_type: SliceType::TOP, side: GridSide::Bottom},
-                NeighborSlice {slice_type: SliceType::RIGHT, side: GridSide::Left},
+                NeighborSlice {slice_type: SliceType::Bottom, side: GridSide::Top},
+                NeighborSlice {slice_type: SliceType::Left, side: GridSide::Right},
+                NeighborSlice {slice_type: SliceType::Top, side: GridSide::Bottom},
+                NeighborSlice {slice_type: SliceType::Right, side: GridSide::Left},
             ],
             GridSide::Bottom => [
-                NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::Back},
-                NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::Right},
-                NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::Front},
-                NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::Left},
+                NeighborSlice {slice_type: SliceType::Bottom, side: GridSide::Back},
+                NeighborSlice {slice_type: SliceType::Bottom, side: GridSide::Right},
+                NeighborSlice {slice_type: SliceType::Bottom, side: GridSide::Front},
+                NeighborSlice {slice_type: SliceType::Bottom, side: GridSide::Left},
             ],
             GridSide::Left => [
-                NeighborSlice {slice_type: SliceType::LEFT, side: GridSide::Top},
-                NeighborSlice {slice_type: SliceType::LEFT, side: GridSide::Front},
-                NeighborSlice {slice_type: SliceType::LEFT, side: GridSide::Bottom},
-                NeighborSlice {slice_type: SliceType::RIGHT, side: GridSide::Back},
+                NeighborSlice {slice_type: SliceType::Left, side: GridSide::Top},
+                NeighborSlice {slice_type: SliceType::Left, side: GridSide::Front},
+                NeighborSlice {slice_type: SliceType::Left, side: GridSide::Bottom},
+                NeighborSlice {slice_type: SliceType::Right, side: GridSide::Back},
             ],
             GridSide::Right => [
-                NeighborSlice {slice_type: SliceType::RIGHT, side: GridSide::Top},
-                NeighborSlice {slice_type: SliceType::RIGHT, side: GridSide::Front},
-                NeighborSlice {slice_type: SliceType::RIGHT, side: GridSide::Bottom},
-                NeighborSlice {slice_type: SliceType::LEFT, side: GridSide::Back},
+                NeighborSlice {slice_type: SliceType::Right, side: GridSide::Top},
+                NeighborSlice {slice_type: SliceType::Right, side: GridSide::Front},
+                NeighborSlice {slice_type: SliceType::Right, side: GridSide::Bottom},
+                NeighborSlice {slice_type: SliceType::Left, side: GridSide::Back},
             ],
             GridSide::Back => [
-                NeighborSlice {slice_type: SliceType::TOP, side: GridSide::Top},
-                NeighborSlice {slice_type: SliceType::RIGHT, side: GridSide::Right},
-                NeighborSlice {slice_type: SliceType::BOTTOM, side: GridSide::Bottom},
-                NeighborSlice {slice_type: SliceType::LEFT, side: GridSide::Left},
+                NeighborSlice {slice_type: SliceType::Top, side: GridSide::Top},
+                NeighborSlice {slice_type: SliceType::Right, side: GridSide::Right},
+                NeighborSlice {slice_type: SliceType::Bottom, side: GridSide::Bottom},
+                NeighborSlice {slice_type: SliceType::Left, side: GridSide::Left},
             ],
             GridSide::MiddleX => [
-                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::Top},
-                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::Front},
-                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::Bottom},
-                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::Back},
+                NeighborSlice {slice_type: SliceType::Vertical, side: GridSide::Top},
+                NeighborSlice {slice_type: SliceType::Vertical, side: GridSide::Front},
+                NeighborSlice {slice_type: SliceType::Vertical, side: GridSide::Bottom},
+                NeighborSlice {slice_type: SliceType::VerticalFlipped, side: GridSide::Back},
             ],
             GridSide::MiddleY => [
-                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::Back},
-                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::Right},
-                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::Front},
-                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::Left},
+                NeighborSlice {slice_type: SliceType::Horizontal, side: GridSide::Back},
+                NeighborSlice {slice_type: SliceType::Horizontal, side: GridSide::Right},
+                NeighborSlice {slice_type: SliceType::Horizontal, side: GridSide::Front},
+                NeighborSlice {slice_type: SliceType::Horizontal, side: GridSide::Left},
             ],
             GridSide::MiddleZ => [
-                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::Top},
-                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::Right},
-                NeighborSlice {slice_type: SliceType::HORIZONTAL, side: GridSide::Bottom},
-                NeighborSlice {slice_type: SliceType::VERTICAL, side: GridSide::Left},
+                NeighborSlice {slice_type: SliceType::HorizontalFlipped, side: GridSide::Top},
+                NeighborSlice {slice_type: SliceType::Vertical, side: GridSide::Right},
+                NeighborSlice {slice_type: SliceType::Horizontal, side: GridSide::Bottom},
+                NeighborSlice {slice_type: SliceType::VerticalFlipped, side: GridSide::Left},
             ],
         }
     }
@@ -498,6 +524,9 @@ mod tests {
             && assert_whole_color(grid, GridSide::Bottom, Color::Yellow)
     }
 
+    fn new_custom_face(grid: [[Color; 3]; 3]) -> GridFace {
+        GridFace { grid }
+    }
 
     fn create_solved_grid() -> Grid {
         Grid {
@@ -513,10 +542,6 @@ mod tests {
     }
 
     fn create_mixed_grid() -> Grid {
-        fn new_custom_face(grid: [[Color; 3]; 3]) -> GridFace {
-            GridFace { grid }
-        }
-
         Grid {
             faces: [
                 // TOP
@@ -656,7 +681,275 @@ mod tests {
     }
 
     #[test]
-    fn test_solving_mixed_cuve() {
+    fn test_middle_move_m() {
+        use GridSide::*;
+        use MoveDirection::*;
+
+        let mut grid = create_solved_grid();
+
+        grid.move_face(Top, Clockwise);
+        grid.move_face(Bottom, Clockwise);
+        grid.move_face(Front, Clockwise);
+        grid.move_face(Right, Clockwise);
+        grid.move_face(Top, Clockwise);
+        
+        grid.move_face(MiddleX, Clockwise);
+
+        let front = &grid.faces[Front.idx()];
+        assert_eq!(front, &new_custom_face([
+                    [White, White, White],
+                    [Orange, White, Yellow],
+                    [Orange, Red, Yellow],
+                ]));
+
+        let top = &grid.faces[Top.idx()];
+        assert_eq!(top, &new_custom_face([
+                    [Blue, Red, White],
+                    [Orange, Blue, White],
+                    [Red, Green, Red],
+                ]));
+
+        let back = &grid.faces[Back.idx()];
+        assert_eq!(back, &new_custom_face([
+                    [Green, Yellow, Yellow],
+                    [White, Yellow, Blue],
+                    [White, Red, Red],
+                ]));
+
+        let bottom = &grid.faces[Bottom.idx()];
+        assert_eq!(bottom, &new_custom_face([
+                    [Green, White, Red],
+                    [Yellow, Green, Blue],
+                    [Yellow, Green, Orange],
+                ]));
+    }
+
+    #[test]
+    fn test_middle_move_m_counter_clockwise() {
+        use GridSide::*;
+        use MoveDirection::*;
+
+        let mut grid = create_solved_grid();
+
+        grid.move_face(Top, Clockwise);
+        grid.move_face(Bottom, Clockwise);
+        grid.move_face(Front, Clockwise);
+        grid.move_face(Right, Clockwise);
+        grid.move_face(Top, Clockwise);
+        
+        grid.move_face(MiddleX, CounterClockwise);
+
+        let front = &grid.faces[Front.idx()];
+        assert_eq!(front, &new_custom_face([
+                    [White, Red, White],
+                    [Orange, Yellow, Yellow],
+                    [Orange, Yellow, Yellow],
+                ]));
+
+        let top = &grid.faces[Top.idx()];
+        assert_eq!(top, &new_custom_face([
+                    [Blue, White, White],
+                    [Orange, Green, White],
+                    [Red, Green, Red],
+                ]));
+
+        let back = &grid.faces[Back.idx()];
+        assert_eq!(back, &new_custom_face([
+                    [Green, Red, Yellow],
+                    [White, White, Blue],
+                    [White, White, Red],
+                ]));
+
+        let bottom = &grid.faces[Bottom.idx()];
+        assert_eq!(bottom, &new_custom_face([
+                    [Green, Red, Red],
+                    [Yellow, Blue, Blue],
+                    [Yellow, Green, Orange],
+                ]));
+    }
+
+    #[test]
+    fn test_middle_move_s() {
+        use GridSide::*;
+        use MoveDirection::*;
+
+        let mut grid = create_solved_grid();
+
+        grid.move_face(Top, Clockwise);
+        grid.move_face(Bottom, Clockwise);
+        grid.move_face(Right, Clockwise);
+        grid.move_face(Back, Clockwise);
+        grid.move_face(Top, Clockwise);
+
+        grid.move_face(MiddleZ, Clockwise);
+
+        let top = &grid.faces[Top.idx()];
+        assert_eq!(top, &new_custom_face([
+                    [White, White, Blue],
+                    [Blue, Orange, Red],
+                    [Orange, Green, Blue],
+                ]));
+
+        let right = &grid.faces[Right.idx()];
+        assert_eq!(right, &new_custom_face([
+                    [White, White, White],
+                    [Green, White, Yellow],
+                    [Green, Blue, Yellow],
+                ]));
+                
+        let bottom = &grid.faces[Bottom.idx()];
+        assert_eq!(bottom, &new_custom_face([
+                    [Yellow, Yellow, Red],
+                    [Red, Red, White],
+                    [Green, Orange, Blue],
+                ]));
+
+        let left = &grid.faces[Left.idx()];
+        assert_eq!(left, &new_custom_face([
+                    [Red, Yellow, Yellow],
+                    [White, Yellow, Orange],
+                    [White, Blue, Blue],
+                ]));
+
+    }
+
+    #[test]
+    fn test_middle_move_s_counter_clockwise() {
+        use GridSide::*;
+        use MoveDirection::*;
+
+        let mut grid = create_solved_grid();
+
+        grid.move_face(Top, Clockwise);
+        grid.move_face(Bottom, Clockwise);
+        grid.move_face(Right, Clockwise);
+        grid.move_face(Back, Clockwise);
+        grid.move_face(Top, Clockwise);
+
+        grid.move_face(MiddleZ, CounterClockwise);
+
+        let top = &grid.faces[Top.idx()];
+        assert_eq!(top, &new_custom_face([
+                    [White, White, Blue],
+                    [White, Red, Red],
+                    [Orange, Green, Blue],
+                ]));
+
+        let right = &grid.faces[Right.idx()];
+        assert_eq!(right, &new_custom_face([
+                    [White, Blue, White],
+                    [Green, Yellow, Yellow],
+                    [Green, Yellow, Yellow],
+                ]));
+                
+        let bottom = &grid.faces[Bottom.idx()];
+        assert_eq!(bottom, &new_custom_face([
+                    [Yellow, Yellow, Red],
+                    [Red, Orange, Blue],
+                    [Green, Orange, Blue],
+                ]));
+
+        let left = &grid.faces[Left.idx()];
+        assert_eq!(left, &new_custom_face([
+                    [Red, Blue, Yellow],
+                    [White, White, Orange],
+                    [White, White, Blue],
+                ]));
+
+    }
+
+    #[test]
+    fn test_middle_move_e() {
+        use GridSide::*;
+        use MoveDirection::*;
+
+        let mut grid = create_solved_grid();
+
+        grid.move_face(Front, Clockwise);
+        grid.move_face(Back, Clockwise);
+        grid.move_face(Right, Clockwise);
+        grid.move_face(Top, Clockwise);
+        grid.move_face(Front, Clockwise);
+
+        grid.move_face(MiddleY, Clockwise);
+
+        let front = &grid.faces[Front.idx()];
+        assert_eq!(front, &new_custom_face([
+                    [Green, Green, White],
+                    [White, Orange, Red],
+                    [Orange, Yellow, White],
+                ]));
+
+        let right = &grid.faces[Right.idx()];
+        assert_eq!(right, &new_custom_face([
+                    [Green, Blue, Blue],
+                    [Green, Green, White],
+                    [Green, Yellow, Yellow],
+                ]));
+                
+        let back = &grid.faces[Back.idx()];
+        assert_eq!(back, &new_custom_face([
+                    [White, Orange, Yellow],
+                    [Green, Red, Red],
+                    [Red, Blue, Blue],
+                ]));
+
+        let left = &grid.faces[Left.idx()];
+        assert_eq!(left, &new_custom_face([
+                    [Green, Green, Red],
+                    [White, Blue, Blue],
+                    [White, Orange, Blue],
+                ]));
+
+    }
+
+    #[test]
+    fn test_middle_move_e_counter_clockwise() {
+        use GridSide::*;
+        use MoveDirection::*;
+
+        let mut grid = create_solved_grid();
+
+        grid.move_face(Front, Clockwise);
+        grid.move_face(Back, Clockwise);
+        grid.move_face(Right, Clockwise);
+        grid.move_face(Top, Clockwise);
+        grid.move_face(Front, Clockwise);
+
+        grid.move_face(MiddleY, CounterClockwise);
+
+        let front = &grid.faces[Front.idx()];
+        assert_eq!(front, &new_custom_face([
+                    [Green, Green, White],
+                    [Green, Red, Red],
+                    [Orange, Yellow, White],
+                ]));
+
+        let right = &grid.faces[Right.idx()];
+        assert_eq!(right, &new_custom_face([
+                    [Green, Blue, Blue],
+                    [White, Blue, Blue],
+                    [Green, Yellow, Yellow],
+                ]));
+                
+        let back = &grid.faces[Back.idx()];
+        assert_eq!(back, &new_custom_face([
+                    [White, Orange, Yellow],
+                    [White, Orange, Red],
+                    [Red, Blue, Blue],
+                ]));
+
+        let left = &grid.faces[Left.idx()];
+        assert_eq!(left, &new_custom_face([
+                    [Green, Green, Red],
+                    [Green, Green, White],
+                    [White, Orange, Blue],
+                ]));
+
+    }
+
+    #[test]
+    fn test_solving_mixed_cube() {
         use GridSide::*;
         use MoveDirection::*;
 
