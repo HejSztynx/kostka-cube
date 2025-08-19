@@ -167,12 +167,6 @@ impl CubeSlice {
     ) {
         match axis {
             Axis::X => {
-                if let CubeSliceOrder::MIDDLE = &order {
-                    if let Some(color) = colors.get_mut(3) {
-                        color.reverse();
-                    }
-                }
-
                 if let CubeSliceOrder::LAST = &order { } else {
                     for i in 0..4 {
                         if let Some(color) = colors.get_mut(i) {
@@ -198,14 +192,6 @@ impl CubeSlice {
                         if let Some(color) = colors.get_mut(i) {
                             color.reverse();
                         }
-                    }
-                }
-                if let CubeSliceOrder::MIDDLE = order {
-                    if let Some(color) = colors.get_mut(0) {
-                        color.reverse();
-                    }
-                    if let Some(color) = colors.get_mut(3) {
-                        color.reverse();
                     }
                 }
             }
