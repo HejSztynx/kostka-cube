@@ -1,3 +1,3 @@
 fn main() {
-    kostka::game::game();
+    kostka::game::game::game();
 }

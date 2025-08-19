@@ -1,10 +1,15 @@
 use std::io::{self, Write};
 
-use crate::cube_utils::Color;
-use crate::slice::FaceSlice;
-
-use super::geometry::{Point2D, Point3D, Triangle};
-use super::cube::Face;
+use crate::{
+    utils::{
+        cube_utils::Color,
+        geometry::{Point2D, Point3D, Triangle}
+    },
+    cube::{
+        slice::FaceSlice,
+        cube::Face
+    }
+};
 
 const SCREEN_X: usize = 70;
 const SCREEN_Y: usize = 45;

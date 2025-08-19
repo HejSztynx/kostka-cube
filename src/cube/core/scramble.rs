@@ -1,5 +1,11 @@
-use crate::cube_utils::Axis;
-use crate::grid::{Grid, GridSide, MoveDirection};
+use crate::{
+    utils::{
+        cube_utils::Axis,
+    },
+    cube::{
+        core::grid::{Grid, GridSide, MoveDirection}
+    }
+};
 
 use rand::seq::SliceRandom;
 use rand::thread_rng;

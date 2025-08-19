@@ -1,9 +1,15 @@
 use crate::{
-    cube::Face, 
-    cube_utils::{Axis, Color}, 
-    geometry::Point3D, 
-    grid::{GridSide, MoveDirection}, 
-    screen::{AnyFace, Renderable}
+    utils::{
+        cube_utils::{Axis, Color},
+        geometry::Point3D
+    },
+    cube::{
+        cube::Face,
+        core::{
+            grid::{GridSide, MoveDirection}
+        }
+    },
+    game::render::{AnyFace, Renderable}
 };
 
 const TIEBREAKER_WEIGHT: f32 = 0.001;

@@ -1,6 +1,10 @@
 use crate::{
-    cube_utils::{Axis, Color}, 
-    slice::{CubeMove, CubeSliceOrder}
+    utils::{
+        cube_utils::{Axis, Color},
+    },
+    cube::{
+        slice::{CubeMove, CubeSliceOrder}
+    }
 };
 
 const PRINT_CHAR: &str = "██";
@@ -450,7 +454,7 @@ impl Grid {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cube_utils::Color;
+    use crate::utils::cube_utils::Color;
     use Color::*;
 
     fn assert_whole_color(grid: &Grid, side: GridSide, color: Color) -> bool {

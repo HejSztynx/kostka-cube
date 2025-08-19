@@ -1,8 +1,12 @@
-use crate::{cube::Cube, grid::MoveDirection};
-use crate::grid::{Grid, GridSide};
-use crate::screen::{Renderable, Screen};
-use crate::slice::{CubeMove, CubeSlice, CubeSliceOrder};
-use crate::scramble::scramble;
+use crate::{
+    cube::{
+        core::{
+            grid::{Grid, GridSide, MoveDirection},
+            scramble::scramble
+        }, cube::Cube, slice::{CubeMove, CubeSlice, CubeSliceOrder}, slice_builder::CubeSliceBuilder
+    },
+    game::render::{Renderable, Screen}
+};
 
 use core::f32;
 use std::io::{self, Write};
@@ -108,13 +112,8 @@ impl Game {
 
     fn make_move(&mut self, input: &str) -> Result<(), String> {
         let cube_move = self.parse_and_translate_move(input)?;
-        
-        print!("Translated move - {:?}", cube_move);
-        io::stdout().flush().unwrap();
 
-        std::thread::sleep(Duration::from_millis(2000));
-
-        let mut slices = self.cube.create_cube_slices(&self.grid, &cube_move.axis);
+        let mut slices = CubeSliceBuilder::create_cube_slices(&self.cube, &self.grid, &cube_move.axis);
         self.animate_rotation(&mut slices, &cube_move);
         
         self.grid.apply_move(cube_move);

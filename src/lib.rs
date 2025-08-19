@@ -1,8 +1,3 @@
-pub mod geometry;
+pub mod utils;
 pub mod cube;
-pub mod screen;
-pub mod grid;
-pub mod scramble;
 pub mod game;
-pub mod slice;
-pub mod cube_utils;
