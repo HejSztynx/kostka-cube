@@ -131,16 +131,31 @@ impl Cube {
         self.rotation_x = snap_rotation(self.rotation_x + angle);
     }
 
+    fn try_get_grid_face_at_idx(&self, idx: usize) -> GridFace {
+        if self.faces.len() == 0 {
+            GridFace::empty()
+        } else {
+            self.faces[idx].grid_face.clone()
+        }
+    }
+
     fn apply_rotation(&mut self) {
         let corners: Vec<Point3D> = self.transformed_corners();
 
+        let face_0 = self.try_get_grid_face_at_idx(0);
+        let face_1 = self.try_get_grid_face_at_idx(1);
+        let face_2 = self.try_get_grid_face_at_idx(2);
+        let face_3 = self.try_get_grid_face_at_idx(3);
+        let face_4 = self.try_get_grid_face_at_idx(4);
+        let face_5 = self.try_get_grid_face_at_idx(5);
+
         self.faces = vec![
-            Face::new([corners[2], corners[3], corners[0], corners[1]], GridFace::empty()),
-            Face::new([corners[2], corners[1], corners[5], corners[6]], GridFace::empty()),
-            Face::new([corners[1], corners[0], corners[4], corners[5]], GridFace::empty()),
-            Face::new([corners[0], corners[3], corners[7], corners[4]], GridFace::empty()),
-            Face::new([corners[3], corners[2], corners[6], corners[7]], GridFace::empty()),
-            Face::new([corners[5], corners[4], corners[7], corners[6]], GridFace::empty()),
+            Face::new([corners[2], corners[3], corners[0], corners[1]], face_0),
+            Face::new([corners[2], corners[1], corners[5], corners[6]], face_1),
+            Face::new([corners[1], corners[0], corners[4], corners[5]], face_2),
+            Face::new([corners[0], corners[3], corners[7], corners[4]], face_3),
+            Face::new([corners[3], corners[2], corners[6], corners[7]], face_4),
+            Face::new([corners[5], corners[4], corners[7], corners[6]], face_5),
         ];
     }
 

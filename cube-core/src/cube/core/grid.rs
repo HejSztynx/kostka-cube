@@ -10,7 +10,7 @@ use crate::{
 const PRINT_CHAR: &str = "██";
 const ANSI_RESET: &str = "\x1b[0m";
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum MoveDirection {
     Clockwise,
     CounterClockwise,

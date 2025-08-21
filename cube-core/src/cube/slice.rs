@@ -46,7 +46,7 @@ impl FaceSlice {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CubeMove {
     pub axis: Axis,
     pub grid_side: GridSide,
@@ -85,7 +85,7 @@ impl CubeMove {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum CubeSliceOrder {
     FIRST,
     MIDDLE,
@@ -102,6 +102,7 @@ impl CubeSliceOrder {
     }
 }
 
+#[derive(Clone)]
 pub struct CubeSlice {
     pub face_1: Face,
     pub face_2: Face,

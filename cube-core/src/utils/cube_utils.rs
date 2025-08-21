@@ -8,6 +8,7 @@ pub enum Color {
     Orange,
     Magenta,
     Gray,
+    Black,
 }
 
 impl Color {
@@ -21,11 +22,26 @@ impl Color {
             Color::Orange => "\x1b[38;5;208m",
             Color::Magenta => "\x1b[95m",
             Color::Gray  => "\x1b[90m",
+            Color::Black => panic!()
+        }
+    }
+
+    pub fn rgba(&self) -> [u8; 4] {
+        match self {
+            Color::White   => [0xff, 0xff, 0xff, 0xff],
+            Color::Yellow  => [0xff, 0xff, 0x00, 0xff],
+            Color::Blue    => [0x00, 0x00, 0xff, 0xff],
+            Color::Red     => [0xff, 0x00, 0x00, 0xff],
+            Color::Green   => [0x00, 0xff, 0x00, 0xff],
+            Color::Orange  => [0xff, 0xa5, 0x00, 0xff],
+            Color::Magenta => [0xff, 0x00, 0xff, 0xff],
+            Color::Gray    => [0x80, 0x80, 0x80, 0xff],
+            Color::Black   => [0x00, 0x00, 0x00, 0xff],
         }
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Axis {
     X,
     Y,
