@@ -11,11 +11,11 @@ use crate::{
     }
 };
 
-const SCREEN_X: usize = 70;
-const SCREEN_Y: usize = 45;
+const SCREEN_X: usize = 320;
+const SCREEN_Y: usize = 320;
 
-const SCREEN_X_OFFSET: isize = 30;
-const SCREEN_Y_OFFSET: isize = 22;
+const SCREEN_X_OFFSET: isize = 160;
+const SCREEN_Y_OFFSET: isize = 160;
 
 const PRINT_CHAR: &str = "██";
 const ANSI_RESET: &str = "\x1b[0m";
@@ -53,6 +53,10 @@ impl Screen {
             zp,
             projection_scale
         }
+    }
+
+    pub fn color_at(&self, x: i16, y: i16) -> Option<Color> {
+        self.screen[SCREEN_Y - y as usize - 1][x as usize]
     }
 
     fn project_point(&self, p: Point3D) -> Point2D {

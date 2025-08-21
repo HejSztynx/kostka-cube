@@ -5,3 +5,11 @@ edition = "2024"
 
 [dependencies]
 cube-core = { path = "../cube-core" }
+
+log = "0.4"
+error-iter = "0.4"
+pixels = "0.15"
+winit = "0.29"
+winit_input_helper = "0.15"
+env_logger = "0.10"
+game-loop = { version = "=1.1.0", features = ["winit"] }

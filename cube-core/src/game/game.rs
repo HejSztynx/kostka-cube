@@ -128,6 +128,7 @@ impl Game {
     }
 
     fn render_once(&mut self, slices: &[CubeSlice; 3]) {
+        self.screen.clear_screen();
         let slices_vec: Vec<&dyn Renderable> = slices.iter()
         .map(|s| s as &dyn Renderable)
         .collect();
@@ -135,7 +136,6 @@ impl Game {
         self.screen.render(slices_vec);
         self.screen.print_screen();
         std::thread::sleep(Duration::from_millis(FRAME_TIME));
-        self.screen.clear_screen();
     }
 
     fn animate_rotation(&mut self, slices: &mut [CubeSlice; 3], cube_move: &CubeMove) {
