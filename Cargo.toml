@@ -2,5 +2,5 @@
 
 members = [
     "cube-core", 
-    "cube-tui"
+    "cube-game"
 ]

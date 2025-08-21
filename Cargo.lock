@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cube-tui"
+name = "cube-game"
 version = "0.1.0"
 dependencies = [
  "cube-core",
