@@ -8,7 +8,7 @@
 
 ## Features ✨
 
-- `Pixels rendering` *– lightweight, fast, and perfect for pixel-based graphics.* [pixels crate.io page](https://crates.io/crates/pixels)
+- `Pixels + winit rendering` *– lightweight, fast, and perfect for pixel-based graphics.* [pixels crate.io page](https://crates.io/crates/pixels)
 
 
 - `Manual 2D projection` – all cube transformations and perspective math are done by hand, no external 3D engine.
@@ -29,12 +29,13 @@ Currently working on:
 
 - Timer functionality ⏱️ – measure your solve times directly in the app.
 
-## Building 🔧
+## Installing 🔧
+
+Make sure that *cargo bin* directory is added to system's `PATH`
 
 ```
-git clone https://github.com/hejsztynx/kostka-cube
-cd kostka-cube
-cargo run
+cargo install kostka
+kostka
 ```
 
 *Requires Rust installed (latest stable recommended).*
