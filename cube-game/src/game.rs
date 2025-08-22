@@ -223,8 +223,9 @@ impl Game {
             }
         );
 
-
-        self.controls.next_move = next_move;
+        if next_move.is_some() {
+            self.controls.next_move = next_move;
+        }
     }
     
     fn update(&mut self) {
