@@ -3,6 +3,10 @@ use std::collections::HashMap;
 use cube_core::cube::core::grid::{GridSide, MoveDirection};
 use winit::keyboard::KeyCode;
 
+// functional key mapping
+
+pub const SCRAMBLE_CODE: KeyCode = KeyCode::Digit1;
+
 // rotation key mapping
 
 pub const ROTATE_X_CODE: KeyCode = KeyCode::KeyP;

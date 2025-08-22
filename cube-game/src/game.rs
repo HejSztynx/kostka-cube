@@ -29,6 +29,8 @@ use std::rc::Rc;
 use std::sync::Arc;
 use std::time::Duration;
 
+use crate::controls::SCRAMBLE_CODE;
+
 const X_INIT: f32 = 0.0;
 const Y_INIT: f32 = 0.0;
 const Z_INIT: f32 = 5.0;
@@ -99,7 +101,7 @@ pub fn game() -> Result<(), Error> {
                 }
 
                 // Reset game
-                if g.game.input.key_pressed(KeyCode::ShiftLeft) {
+                if g.game.input.key_pressed(SCRAMBLE_CODE) {
                     g.game.reset_game();
                 }
 
