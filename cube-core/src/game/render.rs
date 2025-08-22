@@ -1,5 +1,3 @@
-use std::io::{self, Write};
-
 use crate::{
     utils::{
         cube_utils::Color,
@@ -11,14 +9,11 @@ use crate::{
     }
 };
 
-const SCREEN_X: usize = 320;
-const SCREEN_Y: usize = 320;
+pub const SCREEN_X: usize = 320;
+pub const SCREEN_Y: usize = 320;
 
-const SCREEN_X_OFFSET: isize = 160;
-const SCREEN_Y_OFFSET: isize = 160;
-
-const PRINT_CHAR: &str = "██";
-const ANSI_RESET: &str = "\x1b[0m";
+const SCREEN_X_OFFSET: isize = (SCREEN_X / 2) as isize;
+const SCREEN_Y_OFFSET: isize = (SCREEN_Y / 2) as isize;
 
 pub enum AnyFace {
     Face(Face),
@@ -41,7 +36,7 @@ pub trait Renderable {
 }
 
 pub struct Screen {
-    screen: [[Option<Color>; SCREEN_X]; SCREEN_Y],
+    screen: Box<[[Option<Color>; SCREEN_X]; SCREEN_Y]>,
     zp: f32,
     projection_scale: f32,
 }
@@ -49,7 +44,7 @@ pub struct Screen {
 impl Screen {
     pub fn new(zp: f32, projection_scale: f32) -> Screen {
         Screen {
-            screen: [[None; SCREEN_X]; SCREEN_Y],
+            screen: Box::new([[None; SCREEN_X]; SCREEN_Y]),
             zp,
             projection_scale
         }
@@ -151,27 +146,11 @@ impl Screen {
         }
     }
 
-    pub fn print_screen(&self) {
-        for y in (0..(SCREEN_Y)).rev() {
-            for x in 0..(SCREEN_X) {
-                match self.screen[y][x] {
-                    Some(color) => print!("{}{}{}", color.to_ansi(), PRINT_CHAR, ANSI_RESET),
-                    _ => print!("  ")
-                };
-            }
-            println!();
-        }
-        io::stdout().flush().unwrap();
-    }
-
     pub fn clear_screen(&mut self) {
         for row in self.screen.iter_mut() {
             for cell in row.iter_mut() {
                 *cell = None;
             }
         }
-
-        print!("{esc}c", esc = 27 as char);
-        io::stdout().flush().unwrap();
     }
 }

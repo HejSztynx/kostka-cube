@@ -6,7 +6,6 @@ use error_iter::ErrorIter as _;
 use log::error;
 use pixels::{Error, Pixels, SurfaceTexture};
 use winit::dpi::LogicalSize;
-use winit::event::{Event, WindowEvent};
 use winit::event_loop::EventLoop;
 use winit::keyboard::KeyCode;
 use winit::window::WindowBuilder;
@@ -20,7 +19,7 @@ use cube_core::{
             scramble::scramble
         }, cube::Cube, slice::{CubeMove, CubeSlice, CubeSliceOrder}, slice_builder::CubeSliceBuilder
     },
-    game::render::{Renderable, Screen},
+    game::render::{Renderable, Screen, SCREEN_X, SCREEN_Y},
     utils::cube_utils::Color
 };
 
@@ -36,19 +35,18 @@ const Z_INIT: f32 = 5.0;
 const ZP: f32 = 6.0;
 const PROJECTION_SCALE: f32 = 64.0;
 
-const FRAME_TIME: u64 = 50;
-const NO_STEPS: u8 = 8;
+const NO_STEPS: u8 = 16;
+const ROTATION_ANGLE: f32 = f32::consts::PI / 64.0;
 
-const WIDTH: u32 = 320;
-const HEIGHT: u32 = 320;
+const WIDTH: u32 = SCREEN_X as u32;
+const HEIGHT: u32 = SCREEN_Y as u32;
 
-const FPS: u32 = 20;
+const FPS: u32 = 60;
 const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
 
 pub fn game() -> Result<(), Error> {
     env_logger::init();
     let event_loop = EventLoop::new().unwrap();
-    let mut input = WinitInputHelper::new();
     let window = {
         let size = LogicalSize::new(WIDTH as f64, HEIGHT as f64);
         let window = WindowBuilder::new()
@@ -229,20 +227,18 @@ impl Game {
     }
     
     fn update(&mut self) {
-        let angle_unit = f32::consts::FRAC_PI_8 / 8.0;
-
         if let Some(am_rc) = self.controls.animated_move.take() {
             {
                 let mut am = am_rc.borrow_mut();
                 for slice in am.slices.iter_mut() {
                     if self.controls.rotation_y != 0.0 {
-                        slice.rotate(Axis::Y, self.controls.rotation_y * angle_unit);
+                        slice.rotate(Axis::Y, self.controls.rotation_y * ROTATION_ANGLE);
                     }
                     if self.controls.rotation_x != 0.0 {
-                        slice.rotate(Axis::X, self.controls.rotation_x * angle_unit);
+                        slice.rotate(Axis::X, self.controls.rotation_x * ROTATION_ANGLE);
                     }
                     if self.controls.rotation_z != 0.0 {
-                        slice.rotate(Axis::Z, self.controls.rotation_x * angle_unit);
+                        slice.rotate(Axis::Z, self.controls.rotation_x * ROTATION_ANGLE);
                     }
                 }
 
@@ -259,13 +255,13 @@ impl Game {
         }
         
         if self.controls.rotation_y != 0.0 {
-            self.cube.rotate_y(self.controls.rotation_y * angle_unit);
+            self.cube.rotate_y(self.controls.rotation_y * ROTATION_ANGLE);
         }
         if self.controls.rotation_x != 0.0 {
-            self.cube.rotate_x(self.controls.rotation_x * angle_unit);
+            self.cube.rotate_x(self.controls.rotation_x * ROTATION_ANGLE);
         }
         if self.controls.rotation_z != 0.0 {
-            self.cube.rotate_z(self.controls.rotation_z * angle_unit);
+            self.cube.rotate_z(self.controls.rotation_z * ROTATION_ANGLE);
         }
 
         self.cube.update_side_map();

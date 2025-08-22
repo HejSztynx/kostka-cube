@@ -61,7 +61,7 @@ fn generate_scramble(length: usize) -> Vec<&'static Move> {
     scramble
 }
 
-fn print_scramble(moves: &Vec<&Move>) {
+fn _print_scramble(moves: &Vec<&Move>) {
     println!("Scramble:");
     for &mv in moves {
         print!("{} ", mv.mv);
@@ -98,6 +98,5 @@ fn apply_scramble(grid: &mut Grid, moves: Vec<&Move>) {
 
 pub fn scramble(grid: &mut Grid) {
     let scramble = generate_scramble(20);
-    print_scramble(&scramble);
     apply_scramble(grid, scramble);
 }
