@@ -3,8 +3,10 @@ use std::collections::HashMap;
 use cube_core::cube::core::grid::{GridSide, MoveDirection};
 use winit::keyboard::KeyCode;
 
-pub const ROTATE_X_CODE: KeyCode = KeyCode::KeyA;
-pub const ROTATE_Y_CODE: KeyCode = KeyCode::KeyS;
+pub const ROTATE_X_CODE: KeyCode = KeyCode::KeyS;
+pub const ROTATE_X_PRIM_CODE: KeyCode = KeyCode::KeyW;
+pub const ROTATE_Y_CODE: KeyCode = KeyCode::KeyA;
+pub const ROTATE_Y_PRIM_CODE: KeyCode = KeyCode::KeyD;
 
 pub const MOVE_R_CODE: KeyCode = KeyCode::KeyR;
 pub const MOVE_R_PRIM_CODE: KeyCode = KeyCode::KeyT;

@@ -139,8 +139,8 @@ struct AnimatedMoveInfo {
 struct Controls {
     animated_move: Option<Rc<RefCell<AnimatedMoveInfo>>>,
     next_move: Option<CubeMove>,
-    rotation_x: bool,
-    rotation_y: bool,
+    rotation_x: f32,
+    rotation_y: f32,
 }
 
 impl Controls {
@@ -148,8 +148,8 @@ impl Controls {
         Controls {
             animated_move: None,
             next_move: None,
-            rotation_x: false,
-            rotation_y: false,
+            rotation_x: 0.0,
+            rotation_y: 0.0,
         }
     }
 }
@@ -168,8 +168,10 @@ impl Game {
         let screen = Screen::new(ZP, PROJECTION_SCALE);
 
         let position: (f32, f32, f32) = (X_INIT, Y_INIT, Z_INIT);
-        let angle_x = -f32::consts::FRAC_PI_4;
-        let angle_y = f32::consts::FRAC_PI_4;
+        // let angle_x = -f32::consts::FRAC_PI_4;
+        // let angle_y = f32::consts::FRAC_PI_4;
+        let angle_y = 0.0;
+        let angle_x = 0.0;
 
         let mut cube = Cube::new(position, angle_y, angle_x);
         let grid = Grid::new();
@@ -191,8 +193,20 @@ impl Game {
     fn update_controls(&mut self) {
         use crate::controls::*;
 
-        let rotation_x = self.input.key_held(ROTATE_X_CODE);
-        let rotation_y = self.input.key_held(ROTATE_Y_CODE);
+        if self.input.key_held(ROTATE_X_CODE) {
+            self.controls.rotation_x = 1.0;
+        } else if self.input.key_held(ROTATE_X_PRIM_CODE) {
+            self.controls.rotation_x = -1.0;
+        } else {
+            self.controls.rotation_x = 0.0;
+        }
+        if self.input.key_held(ROTATE_Y_CODE) {
+            self.controls.rotation_y = 1.0;
+        } else if self.input.key_held(ROTATE_Y_PRIM_CODE) {
+            self.controls.rotation_y = -1.0;
+        } else {
+            self.controls.rotation_y = 0.0;
+        }
 
         let next_move = move_bindings()
             .into_iter()
@@ -202,19 +216,25 @@ impl Game {
                CubeMove::from_side(side, direction)
             });
 
-        self.controls.rotation_x = rotation_x;
-        self.controls.rotation_y = rotation_y;
 
         self.controls.next_move = next_move;
     }
     
     fn update(&mut self) {
-        self.screen.clear_screen();
         let angle_unit = f32::consts::FRAC_PI_8 / 8.0;
 
         if let Some(am_rc) = self.controls.animated_move.take() {
             {
                 let mut am = am_rc.borrow_mut();
+                for slice in am.slices.iter_mut() {
+                    if self.controls.rotation_y != 0.0 {
+                        slice.rotate_y(self.controls.rotation_y * angle_unit);
+                    }
+                    if self.controls.rotation_x != 0.0 {
+                        slice.rotate_x(self.controls.rotation_x * angle_unit);
+                    }
+                }
+
                 if self.animate_rotation(&mut am) {
                     self.controls.animated_move = Some(Rc::clone(&am_rc));
                 }
@@ -242,16 +262,17 @@ impl Game {
         //         }
         //     }
         // }
-
-        if self.controls.rotation_x {
-            self.cube.rotate_x(angle_unit);
+        
+        if self.controls.rotation_y != 0.0 {
+            self.cube.rotate_y(self.controls.rotation_y * angle_unit);
         }
-        if self.controls.rotation_y {
-            self.cube.rotate_y(angle_unit);
+        if self.controls.rotation_x != 0.0 {
+            self.cube.rotate_x(self.controls.rotation_x * angle_unit);
         }
 
         self.cube.update_side_map();
         if self.controls.animated_move.is_none() {
+            self.screen.clear_screen();
             self.screen.render(vec![&self.cube]);
         }
     }
@@ -347,7 +368,7 @@ impl Game {
         
         self.render_once(&am.slices);
         let slice_to_move = &mut am.slices[am.slice_id];
-        slice_to_move.rotate_around_own_axis(angle_diff);
+        // slice_to_move.rotate_around_own_axis(angle_diff);
         am.current_step += 1;
 
         if am.current_step == NO_STEPS {

@@ -100,6 +100,7 @@ impl <'a> CubeSliceBuilder<'a> {
 
         [
             CubeSlice::new(
+                self.cube.position,
                 self.cube.faces[f_1_idx].clone(),
                 Face::new(
                     [
@@ -114,6 +115,7 @@ impl <'a> CubeSliceBuilder<'a> {
                 CubeSliceOrder::FIRST
             ),
             CubeSlice::new(
+                self.cube.position,
                 Face::new(
                     [
                         self.cube.faces[sf_0_idx].markers.get(self.idx_1.1).unwrap().clone(),
@@ -134,6 +136,7 @@ impl <'a> CubeSliceBuilder<'a> {
                 CubeSliceOrder::MIDDLE
             ),
             CubeSlice::new(
+                self.cube.position,
                 Face::new(last_corners, GridFace::empty()),
                 self.cube.faces[f_2_idx].clone(),
                 neighbors_2_colors,
