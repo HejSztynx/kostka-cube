@@ -1,6 +1,6 @@
 [package]
 name = "kostka"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["hejsztynx"]
 edition = "2024"
 description = "Simple and lightweight Rubik's cube simulator"
