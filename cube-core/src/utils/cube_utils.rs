@@ -6,7 +6,6 @@ pub enum Color {
     Red,
     Green,
     Orange,
-    Magenta,
     Gray,
     Black,
 }
@@ -20,7 +19,6 @@ impl Color {
             Color::Red   => "\x1b[91m",
             Color::Green => "\x1b[92m",
             Color::Orange => "\x1b[38;5;208m",
-            Color::Magenta => "\x1b[95m",
             Color::Gray  => "\x1b[90m",
             Color::Black => panic!()
         }
@@ -28,15 +26,14 @@ impl Color {
 
     pub fn rgba(&self) -> [u8; 4] {
         match self {
-            Color::White   => [0xff, 0xff, 0xff, 0xff],
-            Color::Yellow  => [0xff, 0xff, 0x00, 0xff],
-            Color::Blue    => [0x00, 0x00, 0xff, 0xff],
-            Color::Red     => [0xff, 0x00, 0x00, 0xff],
-            Color::Green   => [0x00, 0xff, 0x00, 0xff],
-            Color::Orange  => [0xff, 0xa5, 0x00, 0xff],
-            Color::Magenta => [0xff, 0x00, 0xff, 0xff],
-            Color::Gray    => [0x80, 0x80, 0x80, 0xff],
-            Color::Black   => [0x00, 0x00, 0x00, 0xff],
+            Color::White   => [235, 235, 235, 0xff],
+            Color::Yellow  => [239, 249, 102, 0xff],
+            Color::Blue    => [74, 150, 221, 0xff],
+            Color::Red     => [249, 44, 59, 0xff],
+            Color::Green   => [118, 242, 139, 0xff],
+            Color::Orange  => [254, 146, 43, 0xff],
+            Color::Gray    => [160, 152, 160, 0xff],
+            Color::Black   => [35, 32, 47, 0xff],
         }
     }
 }
