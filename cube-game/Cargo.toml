@@ -1,7 +1,12 @@
 [package]
-name = "cube-game"
+name = "kostka"
 version = "0.1.0"
+authors = ["hejsztynx"]
 edition = "2024"
+description = "Simple and lightweight Rubik's cube simulator"
+license = "MIT"
+repository = "https://github.com/hejsztynx/kostka-cube"
+readme = "../README.md"
 
 [dependencies]
 cube-core = { path = "../cube-core" }
