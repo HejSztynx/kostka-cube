@@ -2,7 +2,7 @@
 
 ### Your portable Rubik's Cube
 
-![Cube of God](readme/cube.gif)
+![Cube of God](https://raw.githubusercontent.com/hejsztynx/kostka/main/readme/cube.gif)
 
 ##### A fast and lightweight Rubik’s Cube simulator written in Rust, featuring smooth real-time rendering and intuitive controls.
 
@@ -21,7 +21,7 @@
 
 Key mappings are designed to resemble real cube rotations as much as possible. Experiment a bit — after a few tries it becomes second nature.
 
-![controls](readme/controls.png)
+![controls](https://raw.githubusercontent.com/hejsztynx/kostka/main/readme/controls.png)
 
 ## In Progress 🚧
 

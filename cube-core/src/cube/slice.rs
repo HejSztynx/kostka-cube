@@ -58,6 +58,31 @@ impl CubeMove {
     pub fn from_side(grid_side: GridSide, direction: MoveDirection) -> CubeMove {
         CubeMove { axis: grid_side.axis(), grid_side, order: grid_side.order(), direction }
     }
+
+    pub fn from_str(mv: &str) -> Result<(GridSide, MoveDirection), String> {
+        let (side_char, suffix) = mv.split_at(1);
+
+        let grid_side= match side_char {
+            "R" => GridSide::Right,
+            "L" => GridSide::Left,
+            "U" => GridSide::Top,
+            "D" => GridSide::Bottom,
+            "F" => GridSide::Front,
+            "B" => GridSide::Back,
+            "M" => GridSide::MiddleX,
+            "E" => GridSide::MiddleY,
+            "S" => GridSide::MiddleZ,
+            _ => return Err(format!("Incorrect move '{}'", mv)),
+        };
+        let direction = match suffix {
+            "" => Ok(MoveDirection::Clockwise),
+            "'" => Ok(MoveDirection::CounterClockwise),
+            "2" => Ok(MoveDirection::Double),
+            _ => Err(format!("Incorrect move '{}'", mv)),
+        }?;
+
+        Ok((grid_side, direction))
+    }
 }
 
 #[derive(Debug, Clone)]

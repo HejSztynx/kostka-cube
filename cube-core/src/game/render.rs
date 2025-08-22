@@ -1,3 +1,5 @@
+use std::io::{self, Write};
+
 use crate::{
     utils::{
         cube_utils::Color,
@@ -14,6 +16,9 @@ pub const SCREEN_Y: usize = 320;
 
 const SCREEN_X_OFFSET: isize = (SCREEN_X / 2) as isize;
 const SCREEN_Y_OFFSET: isize = (SCREEN_Y / 2) as isize;
+
+const PRINT_CHAR: &str = "██";
+const ANSI_RESET: &str = "\x1b[0m";
 
 pub enum AnyFace {
     Face(Face),
@@ -144,6 +149,24 @@ impl Screen {
                 };
             }
         }
+    }
+
+    pub fn print_screen(&self) {
+        for y in (0..(SCREEN_Y)).rev() {
+            for x in 0..(SCREEN_X) {
+                match self.screen[y][x] {
+                    Some(color) => print!("{}{}{}", color.to_ansi(), PRINT_CHAR, ANSI_RESET),
+                    _ => print!("  ")
+                };
+            }
+            println!();
+        }
+        io::stdout().flush().unwrap();
+    }
+
+    pub fn reset_terminal() {
+        print!("{esc}c", esc = 27 as char);
+        io::stdout().flush().unwrap();
     }
 
     pub fn clear_screen(&mut self) {
