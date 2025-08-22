@@ -137,6 +137,7 @@ struct AnimatedMoveInfo {
 struct Controls {
     animated_move: Option<Rc<RefCell<AnimatedMoveInfo>>>,
     next_move: Option<CubeMove>,
+    double_move: bool,
     rotation_x: f32,
     rotation_y: f32,
     rotation_z: f32,
@@ -147,6 +148,7 @@ impl Controls {
         Controls {
             animated_move: None,
             next_move: None,
+            double_move: false,
             rotation_x: 0.0,
             rotation_y: 0.0,
             rotation_z: 0.0,
@@ -213,6 +215,8 @@ impl Game {
             self.controls.rotation_z = 0.0;
         }
 
+        self.controls.double_move = self.input.key_held(DOUBLE_MOVE);
+
         let next_move = move_bindings()
             .into_iter()
             .find(|(key_code, _)| self.input.key_pressed(*key_code))
@@ -248,7 +252,10 @@ impl Game {
             }
         } else {
             if let Some(mv) = self.controls.next_move.clone() {
-                let translated_move = self.cube.translate_move(mv);
+                let mut translated_move = self.cube.translate_move(mv);
+                if self.controls.double_move {
+                    translated_move.direction = MoveDirection::Double;
+                }
                 self.make_move(translated_move);
                 self.controls.next_move = None;
             }

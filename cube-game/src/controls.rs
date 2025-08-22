@@ -5,43 +5,45 @@ use winit::keyboard::KeyCode;
 
 // rotation key mapping
 
-pub const ROTATE_X_CODE: KeyCode = KeyCode::KeyS;
-pub const ROTATE_X_PRIM_CODE: KeyCode = KeyCode::KeyW;
+pub const ROTATE_X_CODE: KeyCode = KeyCode::KeyP;
+pub const ROTATE_X_PRIM_CODE: KeyCode = KeyCode::Semicolon;
 
-pub const ROTATE_Y_CODE: KeyCode = KeyCode::KeyA;
-pub const ROTATE_Y_PRIM_CODE: KeyCode = KeyCode::KeyD;
+pub const ROTATE_Y_CODE: KeyCode = KeyCode::KeyC;
+pub const ROTATE_Y_PRIM_CODE: KeyCode = KeyCode::KeyM;
 
-pub const ROTATE_Z_CODE: KeyCode = KeyCode::KeyQ;
-pub const ROTATE_Z_PRIM_CODE: KeyCode = KeyCode::KeyE;
+pub const ROTATE_Z_CODE: KeyCode = KeyCode::KeyV;
+pub const ROTATE_Z_PRIM_CODE: KeyCode = KeyCode::KeyN;
 
 // move key mapping
 
-pub const MOVE_R_CODE: KeyCode = KeyCode::KeyR;
-pub const MOVE_R_PRIM_CODE: KeyCode = KeyCode::KeyT;
+pub const DOUBLE_MOVE: KeyCode = KeyCode::Space;
 
-pub const MOVE_L_CODE: KeyCode = KeyCode::KeyY;
-pub const MOVE_L_PRIM_CODE: KeyCode = KeyCode::KeyU;
+pub const MOVE_R_CODE: KeyCode = KeyCode::KeyI;
+pub const MOVE_R_PRIM_CODE: KeyCode = KeyCode::KeyK;
 
-pub const MOVE_U_CODE: KeyCode = KeyCode::KeyI;
-pub const MOVE_U_PRIM_CODE: KeyCode = KeyCode::KeyO;
+pub const MOVE_L_CODE: KeyCode = KeyCode::KeyD;
+pub const MOVE_L_PRIM_CODE: KeyCode = KeyCode::KeyE;
 
-pub const MOVE_D_CODE: KeyCode = KeyCode::KeyF;
-pub const MOVE_D_PRIM_CODE: KeyCode = KeyCode::KeyG;
+pub const MOVE_U_CODE: KeyCode = KeyCode::KeyU;
+pub const MOVE_U_PRIM_CODE: KeyCode = KeyCode::KeyR;
 
-pub const MOVE_F_CODE: KeyCode = KeyCode::KeyH;
-pub const MOVE_F_PRIM_CODE: KeyCode = KeyCode::KeyJ;
+pub const MOVE_D_CODE: KeyCode = KeyCode::KeyS;
+pub const MOVE_D_PRIM_CODE: KeyCode = KeyCode::KeyL;
 
-pub const MOVE_B_CODE: KeyCode = KeyCode::KeyK;
-pub const MOVE_B_PRIM_CODE: KeyCode = KeyCode::KeyL;
+pub const MOVE_F_CODE: KeyCode = KeyCode::KeyJ;
+pub const MOVE_F_PRIM_CODE: KeyCode = KeyCode::KeyF;
 
-pub const MOVE_M_CODE: KeyCode = KeyCode::KeyX;
-pub const MOVE_M_PRIM_CODE: KeyCode = KeyCode::KeyC;
+pub const MOVE_B_CODE: KeyCode = KeyCode::KeyW;
+pub const MOVE_B_PRIM_CODE: KeyCode = KeyCode::KeyO;
 
-pub const MOVE_E_CODE: KeyCode = KeyCode::KeyV;
-pub const MOVE_E_PRIM_CODE: KeyCode = KeyCode::KeyB;
+pub const MOVE_M_CODE: KeyCode = KeyCode::KeyA;
+pub const MOVE_M_PRIM_CODE: KeyCode = KeyCode::KeyQ;
 
-pub const MOVE_S_CODE: KeyCode = KeyCode::KeyN;
-pub const MOVE_S_PRIM_CODE: KeyCode = KeyCode::KeyM;
+pub const MOVE_E_CODE: KeyCode = KeyCode::KeyG;
+pub const MOVE_E_PRIM_CODE: KeyCode = KeyCode::KeyH;
+
+pub const MOVE_S_CODE: KeyCode = KeyCode::KeyY;
+pub const MOVE_S_PRIM_CODE: KeyCode = KeyCode::KeyT;
 
 pub fn move_bindings() -> HashMap<KeyCode, (GridSide, MoveDirection)> {
     use GridSide::*;
