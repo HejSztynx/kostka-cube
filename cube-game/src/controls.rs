@@ -7,6 +7,8 @@ pub const ROTATE_X_CODE: KeyCode = KeyCode::KeyS;
 pub const ROTATE_X_PRIM_CODE: KeyCode = KeyCode::KeyW;
 pub const ROTATE_Y_CODE: KeyCode = KeyCode::KeyA;
 pub const ROTATE_Y_PRIM_CODE: KeyCode = KeyCode::KeyD;
+pub const ROTATE_Z_CODE: KeyCode = KeyCode::KeyQ;
+pub const ROTATE_Z_PRIM_CODE: KeyCode = KeyCode::KeyE;
 
 pub const MOVE_R_CODE: KeyCode = KeyCode::KeyR;
 pub const MOVE_R_PRIM_CODE: KeyCode = KeyCode::KeyT;

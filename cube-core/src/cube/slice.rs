@@ -231,77 +231,46 @@ impl CubeSlice {
         }
     }
 
-    pub fn rotate_x(&mut self, angle: f32) {
-        let flipped_offset = self.global_cube_position.scalar_multiply(-1.0);
-        for p in &mut self.face_1.corners {
-            *p = p.translate(flipped_offset);
-            *p = p.rotate_x(angle);
-            *p = p.translate(self.global_cube_position);
-        }
-        for p in &mut self.face_1.markers {
-            *p = p.translate(flipped_offset);
-            *p = p.rotate_x(angle);
-            *p = p.translate(self.global_cube_position);
-        }
-        
-        for p in &mut self.face_2.corners {
-            *p = p.translate(flipped_offset);
-            *p = p.rotate_x(angle);
-            *p = p.translate(self.global_cube_position);
-        }
-        for p in &mut self.face_2.markers {
-            *p = p.translate(flipped_offset);
-            *p = p.rotate_x(angle);
-            *p = p.translate(self.global_cube_position);
-        }
-        
-        for slice in &mut self.face_slices {
-            for p in &mut slice.corners {
-                *p = p.translate(flipped_offset);
-                *p = p.rotate_x(angle);
-                *p = p.translate(self.global_cube_position);
-            }
-            for p in &mut slice.markers {
-                *p = p.translate(flipped_offset);
-                *p = p.rotate_x(angle);
-                *p = p.translate(self.global_cube_position);
-            }
-        }
-    }
+    pub fn rotate(&mut self, axis: Axis, angle: f32) {
+        let rotate_fn: Box<dyn Fn(Point3D) -> Point3D> = match axis {
+            Axis::X => Box::new(move |p| p.rotate_x(angle)),
+            Axis::Y => Box::new(move |p| p.rotate_y(angle)),
+            Axis::Z => Box::new(move |p| p.rotate_z(angle)),
+        };
 
-    pub fn rotate_y(&mut self, angle: f32) {
+
         let flipped_offset = self.global_cube_position.scalar_multiply(-1.0);
         for p in &mut self.face_1.corners {
             *p = p.translate(flipped_offset);
-            *p = p.rotate_y(angle);
+            *p = rotate_fn(*p);
             *p = p.translate(self.global_cube_position);
         }
         for p in &mut self.face_1.markers {
             *p = p.translate(flipped_offset);
-            *p = p.rotate_y(angle);
+            *p = rotate_fn(*p);
             *p = p.translate(self.global_cube_position);
         }
         
         for p in &mut self.face_2.corners {
             *p = p.translate(flipped_offset);
-            *p = p.rotate_y(angle);
+            *p = rotate_fn(*p);
             *p = p.translate(self.global_cube_position);
         }
         for p in &mut self.face_2.markers {
             *p = p.translate(flipped_offset);
-            *p = p.rotate_y(angle);
+            *p = rotate_fn(*p);
             *p = p.translate(self.global_cube_position);
         }
         
         for slice in &mut self.face_slices {
             for p in &mut slice.corners {
                 *p = p.translate(flipped_offset);
-                *p = p.rotate_y(angle);
+                *p = rotate_fn(*p);
                 *p = p.translate(self.global_cube_position);
             }
             for p in &mut slice.markers {
                 *p = p.translate(flipped_offset);
-                *p = p.rotate_y(angle);
+                *p = rotate_fn(*p);
                 *p = p.translate(self.global_cube_position);
             }
         }

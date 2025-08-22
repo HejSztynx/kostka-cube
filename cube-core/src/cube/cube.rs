@@ -164,6 +164,22 @@ impl Cube {
         }
     }
 
+    pub fn rotate_z(&mut self, angle: f32) {
+        let flipped_offset = self.position.scalar_multiply(-1.0);
+        for face in self.faces.iter_mut() {
+            for p in &mut face.corners {
+                *p = p.translate(flipped_offset);
+                *p = p.rotate_z(angle);
+                *p = p.translate(self.position);
+            }
+            for p in &mut face.markers {
+                *p = p.translate(flipped_offset);
+                *p = p.rotate_z(angle);
+                *p = p.translate(self.position);
+            }
+        }
+    }
+
     pub fn apply_grid(&mut self, grid: &Grid) {
         self.faces[0].grid_face = grid.faces[0].clone();
         self.faces[1].grid_face = grid.faces[1].clone();

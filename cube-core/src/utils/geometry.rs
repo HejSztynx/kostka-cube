@@ -52,6 +52,41 @@ impl Point3D {
         rotated.add(&origin)
     }
 
+    pub fn rotate_y(self, angle: f32) -> Self {
+        let (sin, cos) = (angle.sin(), angle.cos());
+        Self {
+            x: self.x * cos + self.z * sin,
+            y: self.y,
+            z: -self.x * sin + self.z * cos,
+        }
+    }
+
+    pub fn rotate_x(self, angle: f32) -> Self {
+        let (sin, cos) = (angle.sin(), angle.cos());
+        Self {
+            x: self.x,
+            y: self.y * cos - self.z * sin,
+            z: self.y * sin + self.z * cos,
+        }
+    }
+
+    pub fn rotate_z(self, angle: f32) -> Self {
+        let (sin, cos) = (angle.sin(), angle.cos());
+        Self {
+            x: self.x * cos - self.y * sin,
+            y: self.x * sin + self.y * cos,
+            z: self.z,
+        }
+    }
+
+    pub fn translate(self, offset: Point3D) -> Self {
+        Self {
+            x: self.x + offset.x,
+            y: self.y + offset.y,
+            z: self.z + offset.z,
+        }
+    }
+
     pub fn dot(&self, other: &Point3D) -> f32 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
@@ -70,25 +105,6 @@ impl Point3D {
             x: self.x / len,
             y: self.y / len,
             z: self.z / len,
-        }
-    }
-
-    pub fn snap(&self) -> Point3D {
-        const EPSILON: f32 = 1e-4;
-
-        fn snap_coord(value: f32) -> f32 {
-            let nearest = value.round();
-            if (value - nearest).abs() < EPSILON {
-                nearest
-            } else {
-                value
-            }
-        }
-
-        Point3D {
-            x: snap_coord(self.x),
-            y: snap_coord(self.y),
-            z: snap_coord(self.z),
         }
     }
 }
@@ -115,47 +131,4 @@ impl Triangle {
 
         a1 + a2 + a3 <= total + 1
     }
-}
-
-impl Point3D {
-    pub fn rotate_y(self, angle: f32) -> Self {
-        let (sin, cos) = (angle.sin(), angle.cos());
-        Self {
-            x: self.x * cos + self.z * sin,
-            y: self.y,
-            z: -self.x * sin + self.z * cos,
-        }
-    }
-
-    pub fn rotate_x(self, angle: f32) -> Self {
-        let (sin, cos) = (angle.sin(), angle.cos());
-        Self {
-            x: self.x,
-            y: self.y * cos - self.z * sin,
-            z: self.y * sin + self.z * cos,
-        }
-    }
-
-    pub fn translate(self, offset: Point3D) -> Self {
-        Self {
-            x: self.x + offset.x,
-            y: self.y + offset.y,
-            z: self.z + offset.z,
-        }
-    }
-}
-
-pub fn snap_rotation(mut angle: f32) -> f32 {
-    const TAU: f32 = core::f32::consts::PI * 2.0;
-    const EPSILON: f32 = 1e-4;
-
-    if angle < 0.0 {
-        angle += TAU;
-    }
-
-    if (angle - TAU).abs() < EPSILON {
-        angle = 0.0;
-    }
-
-    angle
 }

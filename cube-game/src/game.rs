@@ -1,6 +1,7 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
+use cube_core::utils::cube_utils::Axis;
 use error_iter::ErrorIter as _;
 use log::error;
 use pixels::{Error, Pixels, SurfaceTexture};
@@ -140,6 +141,7 @@ struct Controls {
     next_move: Option<CubeMove>,
     rotation_x: f32,
     rotation_y: f32,
+    rotation_z: f32,
 }
 
 impl Controls {
@@ -149,6 +151,7 @@ impl Controls {
             next_move: None,
             rotation_x: 0.0,
             rotation_y: 0.0,
+            rotation_z: 0.0,
         }
     }
 }
@@ -204,13 +207,21 @@ impl Game {
         } else {
             self.controls.rotation_y = 0.0;
         }
+        if self.input.key_held(ROTATE_Z_CODE) {
+            self.controls.rotation_z = 1.0;
+        } else if self.input.key_held(ROTATE_Z_PRIM_CODE) {
+            self.controls.rotation_z = -1.0;
+        } else {
+            self.controls.rotation_z = 0.0;
+        }
 
         let next_move = move_bindings()
             .into_iter()
             .find(|(key_code, _)| self.input.key_pressed(*key_code))
             .map(|(_, (side, direction))| {
                CubeMove::from_side(side, direction)
-            });
+            }
+        );
 
 
         self.controls.next_move = next_move;
@@ -224,10 +235,13 @@ impl Game {
                 let mut am = am_rc.borrow_mut();
                 for slice in am.slices.iter_mut() {
                     if self.controls.rotation_y != 0.0 {
-                        slice.rotate_y(self.controls.rotation_y * angle_unit);
+                        slice.rotate(Axis::Y, self.controls.rotation_y * angle_unit);
                     }
                     if self.controls.rotation_x != 0.0 {
-                        slice.rotate_x(self.controls.rotation_x * angle_unit);
+                        slice.rotate(Axis::X, self.controls.rotation_x * angle_unit);
+                    }
+                    if self.controls.rotation_z != 0.0 {
+                        slice.rotate(Axis::Z, self.controls.rotation_x * angle_unit);
                     }
                 }
 
@@ -248,6 +262,9 @@ impl Game {
         }
         if self.controls.rotation_x != 0.0 {
             self.cube.rotate_x(self.controls.rotation_x * angle_unit);
+        }
+        if self.controls.rotation_z != 0.0 {
+            self.cube.rotate_z(self.controls.rotation_z * angle_unit);
         }
 
         self.cube.update_side_map();
