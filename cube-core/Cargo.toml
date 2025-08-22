@@ -1,7 +1,10 @@
 [package]
 name = "cube-core"
 version = "0.1.0"
+authors = ["hejsztynx"]
 edition = "2024"
+description = "Cube core for 'kostka' simulation"
+license = "MIT"
 
 [dependencies]
 rand = "0.8"
