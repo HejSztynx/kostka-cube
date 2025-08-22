@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use crate::{
     utils::{
-        geometry::{snap_rotation, Point3D}
+        geometry::Point3D
     },
     cube::{
         slice::CubeMove,
@@ -65,8 +65,6 @@ impl Face {
 
 pub struct Cube {
     pub position: Point3D,
-    rotation_y: f32,
-    rotation_x: f32,
     pub faces: Vec<Face>,
     side_map: HashMap<GridSide, GridSide>,
 }
@@ -89,11 +87,11 @@ impl Cube {
 
         let mut cube = Cube {
             position,
-            rotation_y,
-            rotation_x,
             faces,
             side_map: HashMap::new(),
         };
+        cube.rotate_y(rotation_y);
+        cube.rotate_x(rotation_x);
         cube.update_side_map();
         cube
     }
@@ -103,9 +101,6 @@ impl Cube {
 
         self.rotate_x(-TIEBRAKER_ROTATION);
         self.rotate_y(TIEBRAKER_ROTATION);
-        // self.rotation_x -= TIEBRAKER_ROTATION;
-        // self.rotation_y += TIEBRAKER_ROTATION;
-        // self.apply_rotation();
 
         for &side in &[GridSide::Right, GridSide::Left, GridSide::Top, GridSide::Bottom, GridSide::Front, GridSide::Back] {
             let (best_face_idx, _) = self.faces
@@ -131,19 +126,11 @@ impl Cube {
             side_map.insert(side, actual_side);
         }
 
-        // self.rotation_x += TIEBRAKER_ROTATION;
-        // self.rotation_y -= TIEBRAKER_ROTATION;
-
         self.rotate_y(-TIEBRAKER_ROTATION);
         self.rotate_x(TIEBRAKER_ROTATION);
 
-        // self.apply_rotation();
         self.side_map = side_map;
     }
-
-    // pub fn rotate_y(&mut self, angle: f32) {
-    //     self.rotation_y = snap_rotation(self.rotation_y + angle);
-    // }
 
     pub fn rotate_x(&mut self, angle: f32) {
         let flipped_offset = self.position.scalar_multiply(-1.0);
@@ -159,7 +146,6 @@ impl Cube {
                 *p = p.translate(self.position);
             }
         }
-        // self.rotation_x = snap_rotation(self.rotation_x + angle);
     }
 
     pub fn rotate_y(&mut self, angle: f32) {
@@ -176,40 +162,6 @@ impl Cube {
                 *p = p.translate(self.position);
             }
         }
-        // self.rotation_x = snap_rotation(self.rotation_x + angle);
-    }
-
-    fn try_get_grid_face_at_idx(&self, idx: usize) -> GridFace {
-        if self.faces.len() == 0 {
-            GridFace::empty()
-        } else {
-            self.faces[idx].grid_face.clone()
-        }
-    }
-
-    fn apply_rotation(&mut self) {
-        // for face in self.faces.iter_mut() {
-        //     for p in &face.corners {
-        //         *p = p.rotate_x(angle)
-        //     }
-        // }
-        // let corners: Vec<Point3D> = self.transformed_corners();
-
-        // let face_0 = self.try_get_grid_face_at_idx(0);
-        // let face_1 = self.try_get_grid_face_at_idx(1);
-        // let face_2 = self.try_get_grid_face_at_idx(2);
-        // let face_3 = self.try_get_grid_face_at_idx(3);
-        // let face_4 = self.try_get_grid_face_at_idx(4);
-        // let face_5 = self.try_get_grid_face_at_idx(5);
-
-        // self.faces = vec![
-        //     Face::new([corners[2], corners[3], corners[0], corners[1]], face_0),
-        //     Face::new([corners[2], corners[1], corners[5], corners[6]], face_1),
-        //     Face::new([corners[1], corners[0], corners[4], corners[5]], face_2),
-        //     Face::new([corners[0], corners[3], corners[7], corners[4]], face_3),
-        //     Face::new([corners[3], corners[2], corners[6], corners[7]], face_4),
-        //     Face::new([corners[5], corners[4], corners[7], corners[6]], face_5),
-        // ];
     }
 
     pub fn apply_grid(&mut self, grid: &Grid) {
@@ -234,13 +186,6 @@ impl Cube {
             Point3D { x: -h, y: -h, z: h },
             Point3D { x: h, y: -h, z: h },
         ]
-    }
-
-    fn transformed_corners(&self) -> Vec<Point3D> {
-        Self::initial_corners()
-            .into_iter()
-            .map(|p| p.rotate_y(self.rotation_y).rotate_x(self.rotation_x).translate(self.position).snap())
-            .collect()
     }
 
     pub fn translate_move(&self, cube_move: CubeMove) -> CubeMove {

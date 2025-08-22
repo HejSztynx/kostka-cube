@@ -25,7 +25,6 @@ use cube_core::{
 
 use core::f32;
 use std::cell::RefCell;
-use std::io::{self, Write};
 use std::rc::Rc;
 use std::sync::Arc;
 use std::time::Duration;
@@ -168,10 +167,8 @@ impl Game {
         let screen = Screen::new(ZP, PROJECTION_SCALE);
 
         let position: (f32, f32, f32) = (X_INIT, Y_INIT, Z_INIT);
-        // let angle_x = -f32::consts::FRAC_PI_4;
-        // let angle_y = f32::consts::FRAC_PI_4;
-        let angle_y = 0.0;
-        let angle_x = 0.0;
+        let angle_x = -f32::consts::FRAC_PI_4;
+        let angle_y = f32::consts::FRAC_PI_4;
 
         let mut cube = Cube::new(position, angle_y, angle_x);
         let grid = Grid::new();
@@ -212,7 +209,6 @@ impl Game {
             .into_iter()
             .find(|(key_code, _)| self.input.key_pressed(*key_code))
             .map(|(_, (side, direction))| {
-            //    dbg!("Robie ruch {:?} {?}", &side, &direction);
                CubeMove::from_side(side, direction)
             });
 
@@ -246,22 +242,6 @@ impl Game {
                 self.controls.next_move = None;
             }
         }
-
-
-        // match &self.controls.animated_move {
-        //     Some(am_rc) => {
-        //         let mut am = am_rc.borrow_mut();
-        //         self.animate_rotation(&mut am);
-        //     }
-        //     None => {
-        //         if let Some(mv) = self.controls.next_move.clone() {
-        //             let translated_move = self.cube.translate_move(mv);
-        //             self.make_move(translated_move);
-        //             // self.cube.apply_grid(&self.grid);
-        //             self.controls.next_move = None;
-        //         }
-        //     }
-        // }
         
         if self.controls.rotation_y != 0.0 {
             self.cube.rotate_y(self.controls.rotation_y * angle_unit);
@@ -320,14 +300,6 @@ impl Game {
     }
 
     fn make_move(&mut self, cube_move: CubeMove) {
-        // dbg!("siema");
-        // dbg!("siema");
-        // dbg!("siema");
-        // dbg!("siema");
-        // dbg!("siema");
-        // dbg!("siema");
-        // std::thread::sleep(Duration::from_millis(100));
-        // std::thread::sleep(Duration::from_secs(2));
         let slices = CubeSliceBuilder::create_cube_slices(&self.cube, &self.grid, &cube_move.axis);
         self.controls.animated_move = Some(Rc::new(RefCell::new(AnimatedMoveInfo {
             slices,
@@ -346,7 +318,6 @@ impl Game {
             .collect();
 
         self.screen.render(slices_vec);
-        // std::thread::sleep(Duration::from_millis(FRAME_TIME));
     }
 
     fn finish_animating_rotation(&mut self) {
@@ -355,39 +326,15 @@ impl Game {
     }
 
     fn animate_rotation(&mut self, am: &mut AnimatedMoveInfo) -> bool {
-        // dbg!("dupa");
-        // dbg!("dupa");
-        // dbg!("dupa");
-        // dbg!("dupa");
-        // dbg!("dupa");
-        // dbg!("dupa");
-        // std::thread::sleep(Duration::from_millis(100));
-        // std::thread::sleep(Duration::from_secs(2));
-
         let angle_diff = Game::get_angle_diff(&am.cube_move);
         
         self.render_once(&am.slices);
         let slice_to_move = &mut am.slices[am.slice_id];
-        // slice_to_move.rotate_around_own_axis(angle_diff);
+        slice_to_move.rotate_around_own_axis(angle_diff);
         am.current_step += 1;
 
         if am.current_step == NO_STEPS {
             self.finish_animating_rotation();
-            // dbg!("koniec");
-            // dbg!("koniec");
-            // dbg!("koniec");
-            // dbg!("koniec");
-            // dbg!("koniec");
-            // dbg!("koniec");
-            // if let None = self.controls.animated_move {
-            //     dbg!("none");
-            //     dbg!("none");
-            //     dbg!("none");
-            //     dbg!("none");
-                
-            // }
-            // std::thread::sleep(Duration::from_millis(100));
-            // std::thread::sleep(Duration::from_secs(2));
             false
         } else {
             true
