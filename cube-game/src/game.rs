@@ -5,6 +5,7 @@ use cube_core::utils::cube_utils::Axis;
 use error_iter::ErrorIter as _;
 use log::error;
 use pixels::{Error, Pixels, SurfaceTexture};
+use rusttype::Font;
 use winit::dpi::LogicalSize;
 use winit::event_loop::EventLoop;
 use winit::keyboard::KeyCode;
@@ -40,11 +41,8 @@ const PROJECTION_SCALE: f32 = 64.0;
 const NO_STEPS: u8 = 16;
 const ROTATION_ANGLE: f32 = f32::consts::PI / 64.0;
 
-const TIMER_WIDTH: u32 = SCREEN_X as u32 / 4;
-
-const WIDTH: u32 = SCREEN_X as u32 + TIMER_WIDTH * 2;
+const WIDTH: u32 = SCREEN_X as u32;
 const HEIGHT: u32 = SCREEN_Y as u32;
-const SCREEN_BOUNDARY: u32 = WIDTH - TIMER_WIDTH;
 
 const FPS: u32 = 60;
 const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
@@ -160,6 +158,18 @@ impl Controls {
     }
 }
 
+struct Timer {
+    elapsed: f32,
+}
+
+impl Timer {
+    fn new() -> Self {
+        Timer {
+            elapsed: 0.0,
+        }
+    }
+}
+
 struct Game {
     screen: Screen,
     cube: Cube,
@@ -167,6 +177,8 @@ struct Game {
     controls: Controls,
     input: WinitInputHelper,
     pixels: Pixels<'static>,
+    font: Font<'static>,
+    timer: Timer,
 }
 
 impl Game {
@@ -184,6 +196,11 @@ impl Game {
         let controls = Controls::new();
         let input = WinitInputHelper::new();
 
+        let font_data = include_bytes!("../assets/fonts/VendSans-Regular.ttf");
+        let font = rusttype::Font::try_from_bytes(font_data as &[u8]).unwrap();
+
+        let timer = Timer::new();
+
         Game {
             screen,
             cube,
@@ -191,6 +208,8 @@ impl Game {
             controls, 
             input,
             pixels,
+            font,
+            timer,
         }
     }
     
@@ -305,25 +324,64 @@ impl Game {
             let x = (i % WIDTH as usize) as u32;
             let y = (i / WIDTH as usize) as u32;
 
-            let rgba = match x {
-                0..TIMER_WIDTH => {
-                    Color::Blue.rgba()
-                }
-                0..SCREEN_BOUNDARY => {
-                    if let Some(color) = self.screen.color_at((x - TIMER_WIDTH) as i16, y as i16) {
-                        color.rgba()
-                    } else {
-                        Color::Black.rgba()
-                    }
-                }
-                _ => {
-                    Color::Blue.rgba()
-                }
+            let rgba = if let Some(color) = self.screen.color_at(x as i16, y as i16) {
+                color.rgba()
+            } else {
+                Color::Black.rgba()
             };
 
             pixel.copy_from_slice(&rgba);
         }
+
+        self.draw_time();
     }
+
+    fn draw_time(&mut self) {
+        let time= self.timer.elapsed.to_string();
+
+        self.draw_text(
+            time.as_str(),
+            20,
+            20,
+            40.0,
+        );
+    }
+
+    fn draw_text(
+        &mut self,
+        text: &str,
+        x: i32,
+        y: i32,
+        scale_px: f32,
+    ) {
+        use rusttype::{Scale, point};
+
+        let frame = self.pixels.frame_mut();
+        let font = &self.font;
+        let scale = Scale::uniform(scale_px);
+        let v_metrics = font.v_metrics(scale);
+        let glyphs: Vec<_> = font
+            .layout(text, scale, point(x as f32, y as f32 + v_metrics.ascent))
+            .collect();
+
+        for glyph in glyphs {
+            if let Some(bb) = glyph.pixel_bounding_box() {
+                glyph.draw(|gx, gy, v| {
+                    let px = gx as i32 + bb.min.x;
+                    let py = gy as i32 + bb.min.y;
+                    if px >= 0 && py >= 0 && (px as u32) < WIDTH && (py as u32) < (frame.len() / 4 / WIDTH as usize) as u32 {
+                        let idx = ((py as u32 * WIDTH + px as u32) * 4) as usize;
+                        let intensity = (v * 255.0) as u8;
+                        frame[idx] = intensity;     // R
+                        frame[idx + 1] = intensity; // G
+                        frame[idx + 2] = intensity; // B
+                        frame[idx + 3] = 255;       // A
+                    }
+                });
+            }
+        }
+    }
+
 
     fn reset_game(&mut self) {
         scramble(&mut self.grid);
