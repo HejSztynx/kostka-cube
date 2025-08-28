@@ -262,6 +262,18 @@ impl GridFace {
         Self::new(Color::Gray)
     }
 
+    fn is_one_color(&self) -> bool {
+        let first_color = &self.grid[0][0];
+        for row in self.grid.iter() {
+            for color in row {
+                if first_color != color {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+
     pub fn print(&self) {
         for row in self.grid.iter() {
             for color in row {
@@ -337,6 +349,15 @@ impl Grid {
                 GridFace::new(Color::Yellow),
             ]
         }
+    }
+
+    pub fn is_solved(&self) -> bool {
+        for face in self.faces.iter() {
+            if !face.is_one_color() {
+                return false;
+            }
+        }
+        true
     }
 
     pub fn apply_move(&mut self, mv: CubeMove) {
