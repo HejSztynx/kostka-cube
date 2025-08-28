@@ -165,7 +165,7 @@ struct Timer {
 impl Timer {
     fn new() -> Self {
         Timer {
-            elapsed: 0.0,
+            elapsed: 12.43,
         }
     }
 }
@@ -341,9 +341,9 @@ impl Game {
 
         self.draw_text(
             time.as_str(),
-            20,
-            20,
-            40.0,
+            10,
+            HEIGHT as i32 - 30,
+            30.0,
         );
     }
 
@@ -364,18 +364,19 @@ impl Game {
             .layout(text, scale, point(x as f32, y as f32 + v_metrics.ascent))
             .collect();
 
+        let background_rgba = Color::Black.rgba();
         for glyph in glyphs {
             if let Some(bb) = glyph.pixel_bounding_box() {
                 glyph.draw(|gx, gy, v| {
                     let px = gx as i32 + bb.min.x;
                     let py = gy as i32 + bb.min.y;
-                    if px >= 0 && py >= 0 && (px as u32) < WIDTH && (py as u32) < (frame.len() / 4 / WIDTH as usize) as u32 {
+                    if px >= 0 && py >= 0 && (px as u32) < WIDTH && (py as u32) < HEIGHT {
                         let idx = ((py as u32 * WIDTH + px as u32) * 4) as usize;
                         let intensity = (v * 255.0) as u8;
-                        frame[idx] = intensity;     // R
-                        frame[idx + 1] = intensity; // G
-                        frame[idx + 2] = intensity; // B
-                        frame[idx + 3] = 255;       // A
+                        frame[idx] = intensity.saturating_add(background_rgba[0]);         // R
+                        frame[idx + 1] = intensity.saturating_add(background_rgba[1]);     // G
+                        frame[idx + 2] = intensity.saturating_add(background_rgba[2]);     // B
+                        frame[idx + 3] = 255;                                              // A
                     }
                 });
             }
