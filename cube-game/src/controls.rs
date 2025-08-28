@@ -6,6 +6,7 @@ use winit::keyboard::KeyCode;
 // functional key mapping
 
 pub const SCRAMBLE_CODE: KeyCode = KeyCode::Digit1;
+pub const TIMER_CODE: KeyCode = KeyCode::Digit2;
 
 // rotation key mapping
 

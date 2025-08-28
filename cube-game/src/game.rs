@@ -28,9 +28,9 @@ use core::f32;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
-use crate::controls::SCRAMBLE_CODE;
+use crate::controls::{SCRAMBLE_CODE, TIMER_CODE};
 
 const X_INIT: f32 = 0.0;
 const Y_INIT: f32 = 0.0;
@@ -106,6 +106,11 @@ pub fn game() -> Result<(), Error> {
                     g.game.reset_game();
                 }
 
+                // Switch timer
+                if g.game.input.key_pressed(TIMER_CODE) {
+                    g.game.toggle_timer();
+                }
+
                 // Update controls
                 g.game.update_controls();
 
@@ -160,17 +165,34 @@ impl Controls {
 
 struct Timer {
     elapsed: f32,
+    run: bool,
+    instant: Box<Instant>,
 }
 
 impl Timer {
     fn new() -> Self {
         Timer {
-            elapsed: 12.43,
+            elapsed: 0.0,
+            run: false,
+            instant: Box::new(Instant::now()),
         }
+    }
+
+    fn start(&mut self) {
+        self.instant = Box::new(Instant::now());
+        self.run = true;
+    }
+
+    fn update_elapsed(&mut self) -> f32 {
+        if self.run {
+            self.elapsed = self.instant.elapsed().as_secs_f32();
+        }
+        self.elapsed
     }
 }
 
 struct Game {
+    start: bool,
     screen: Screen,
     cube: Cube,
     grid: Grid,
@@ -178,7 +200,7 @@ struct Game {
     input: WinitInputHelper,
     pixels: Pixels<'static>,
     font: Font<'static>,
-    timer: Timer,
+    timer: Option<Timer>,
 }
 
 impl Game {
@@ -199,9 +221,8 @@ impl Game {
         let font_data = include_bytes!("../assets/fonts/VendSans-Regular.ttf");
         let font = rusttype::Font::try_from_bytes(font_data as &[u8]).unwrap();
 
-        let timer = Timer::new();
-
         Game {
+            start: false,
             screen,
             cube,
             grid,
@@ -209,7 +230,7 @@ impl Game {
             input,
             pixels,
             font,
-            timer,
+            timer: None,
         }
     }
     
@@ -256,6 +277,10 @@ impl Game {
 
         if next_move.is_some() {
             self.controls.next_move = next_move;
+            if !self.start {
+                self.start = true;
+                self.start_timer();
+            }
         }
     }
     
@@ -317,8 +342,6 @@ impl Game {
         }
     }
 
-    // fn draw_timer
-
     fn draw(&mut self) {
         for (i, pixel) in self.pixels.frame_mut().chunks_exact_mut(4).enumerate() {
             let x = (i % WIDTH as usize) as u32;
@@ -337,14 +360,17 @@ impl Game {
     }
 
     fn draw_time(&mut self) {
-        let time= self.timer.elapsed.to_string();
-
-        self.draw_text(
-            time.as_str(),
-            10,
-            HEIGHT as i32 - 30,
-            30.0,
-        );
+        if let Some(timer) = self.timer.as_mut() {
+            let elapsed = timer.update_elapsed();
+            let time = format!("{:.2}", elapsed);
+            
+            self.draw_text(
+                time.as_str(),
+                10,
+                HEIGHT as i32 - 30,
+                30.0,
+            );
+        }
     }
 
     fn draw_text(
@@ -383,10 +409,32 @@ impl Game {
         }
     }
 
-
     fn reset_game(&mut self) {
+        self.start = false;
+        self.reset_timer();
         scramble(&mut self.grid);
         self.cube.apply_grid(&self.grid);
+    }
+
+    fn toggle_timer(&mut self) {
+        match &mut self.timer {
+            Some(_) => self.timer = None,
+            None if !self.start => self.timer = Some(Timer::new()),
+            None => {}
+        }
+    }
+
+    fn start_timer(&mut self) {
+        if let Some(timer) = &mut self.timer {
+            timer.start();
+        }
+    }
+
+    fn reset_timer(&mut self) {
+        match &mut self.timer {
+            Some(_) => self.timer = Some(Timer::new()),
+            None => {}
+        }
     }
 
     fn get_angle_diff(cube_move: &CubeMove) -> f32 {
