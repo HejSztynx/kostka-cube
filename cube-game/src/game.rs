@@ -40,8 +40,11 @@ const PROJECTION_SCALE: f32 = 64.0;
 const NO_STEPS: u8 = 16;
 const ROTATION_ANGLE: f32 = f32::consts::PI / 64.0;
 
-const WIDTH: u32 = SCREEN_X as u32;
+const TIMER_WIDTH: u32 = SCREEN_X as u32 / 4;
+
+const WIDTH: u32 = SCREEN_X as u32 + TIMER_WIDTH * 2;
 const HEIGHT: u32 = SCREEN_Y as u32;
+const SCREEN_BOUNDARY: u32 = WIDTH - TIMER_WIDTH;
 
 const FPS: u32 = 60;
 const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
@@ -295,15 +298,27 @@ impl Game {
         }
     }
 
+    // fn draw_timer
+
     fn draw(&mut self) {
         for (i, pixel) in self.pixels.frame_mut().chunks_exact_mut(4).enumerate() {
-            let x = (i % WIDTH as usize) as i16;
-            let y = (i / WIDTH as usize) as i16;
+            let x = (i % WIDTH as usize) as u32;
+            let y = (i / WIDTH as usize) as u32;
 
-            let rgba = if let Some(color) = self.screen.color_at(x, y) {
-                color.rgba()
-            } else {
-                Color::Black.rgba()
+            let rgba = match x {
+                0..TIMER_WIDTH => {
+                    Color::Blue.rgba()
+                }
+                0..SCREEN_BOUNDARY => {
+                    if let Some(color) = self.screen.color_at((x - TIMER_WIDTH) as i16, y as i16) {
+                        color.rgba()
+                    } else {
+                        Color::Black.rgba()
+                    }
+                }
+                _ => {
+                    Color::Blue.rgba()
+                }
             };
 
             pixel.copy_from_slice(&rgba);
