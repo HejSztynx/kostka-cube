@@ -370,7 +370,15 @@ impl Game {
     fn draw_time(&mut self) {
         if let Some(timer) = self.timer.as_mut() {
             let elapsed = timer.update_elapsed();
-            let time = format!("{:.2}", elapsed);
+
+            let minutes = (elapsed / 60.0).floor() as u32;
+            let seconds = elapsed % 60.0;
+
+            let time = if minutes > 0 {
+                format!("{}:{:.2}", minutes, seconds)
+            } else {
+                format!("{:.2}", seconds)
+            };
             
             self.draw_text(
                 time.as_str(),
