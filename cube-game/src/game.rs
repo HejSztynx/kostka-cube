@@ -191,7 +191,7 @@ impl Game {
         }
     }
     
-    fn update_rotations(&mut self) {
+    fn update_controls_rotations(&mut self) {
         use crate::controls::*;
 
         if self.input.key_held(ROTATE_X_CODE) {
@@ -220,7 +220,7 @@ impl Game {
     fn update_controls(&mut self) {
         use crate::controls::*;
 
-        self.update_rotations();
+        self.update_controls_rotations();
 
         self.controls.double_move = self.input.key_held(DOUBLE_MOVE);
 
@@ -256,7 +256,7 @@ impl Game {
                 slice.rotate(Axis::X, self.controls.rotation_x * ROTATION_ANGLE);
             }
             if self.controls.rotation_z != 0.0 {
-                slice.rotate(Axis::Z, self.controls.rotation_x * ROTATION_ANGLE);
+                slice.rotate(Axis::Z, self.controls.rotation_z * ROTATION_ANGLE);
             }
         }
 
