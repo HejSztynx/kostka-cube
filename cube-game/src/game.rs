@@ -222,7 +222,7 @@ impl Game {
         let controls = Controls::new();
         let input = WinitInputHelper::new();
 
-        let font_data = include_bytes!("../assets/fonts/VendSans-Regular.ttf");
+        let font_data = include_bytes!("../assets/fonts/DotGothic16-Regular.ttf");
         let font = rusttype::Font::try_from_bytes(font_data as &[u8]).unwrap();
 
         Game {
