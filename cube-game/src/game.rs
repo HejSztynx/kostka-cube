@@ -128,7 +128,6 @@ fn log_error<E: std::error::Error + 'static>(method_name: &str, err: E) {
     }
 }
 
-#[derive(Clone)]
 struct AnimatedMoveInfo {
     slices: [CubeSlice; 3],
     slice_id: usize,
@@ -192,7 +191,7 @@ impl Game {
         }
     }
     
-    fn update_controls(&mut self) {
+    fn update_rotations(&mut self) {
         use crate::controls::*;
 
         if self.input.key_held(ROTATE_X_CODE) {
@@ -216,6 +215,12 @@ impl Game {
         } else {
             self.controls.rotation_z = 0.0;
         }
+    }
+
+    fn update_controls(&mut self) {
+        use crate::controls::*;
+
+        self.update_rotations();
 
         self.controls.double_move = self.input.key_held(DOUBLE_MOVE);
 
@@ -232,37 +237,35 @@ impl Game {
         }
     }
     
-    fn update(&mut self) {
-        if let Some(am_rc) = self.controls.animated_move.take() {
-            {
-                let mut am = am_rc.borrow_mut();
-                for slice in am.slices.iter_mut() {
-                    if self.controls.rotation_y != 0.0 {
-                        slice.rotate(Axis::Y, self.controls.rotation_y * ROTATION_ANGLE);
-                    }
-                    if self.controls.rotation_x != 0.0 {
-                        slice.rotate(Axis::X, self.controls.rotation_x * ROTATION_ANGLE);
-                    }
-                    if self.controls.rotation_z != 0.0 {
-                        slice.rotate(Axis::Z, self.controls.rotation_x * ROTATION_ANGLE);
-                    }
-                }
+    fn handle_next_move(&mut self, mv: CubeMove) {
+        let mut translated_move = self.cube.translate_move(mv);
+        if self.controls.double_move {
+            translated_move.direction = MoveDirection::Double;
+        }
+        self.make_move(translated_move);
+        self.controls.next_move = None;
+    }
 
-                if self.animate_rotation(&mut am) {
-                    self.controls.animated_move = Some(Rc::clone(&am_rc));
-                }
+    fn handle_animation_step(&mut self, am_rc: Rc<RefCell<AnimatedMoveInfo>>) {
+        let mut am = am_rc.borrow_mut();
+        for slice in am.slices.iter_mut() {
+            if self.controls.rotation_y != 0.0 {
+                slice.rotate(Axis::Y, self.controls.rotation_y * ROTATION_ANGLE);
             }
-        } else {
-            if let Some(mv) = self.controls.next_move.clone() {
-                let mut translated_move = self.cube.translate_move(mv);
-                if self.controls.double_move {
-                    translated_move.direction = MoveDirection::Double;
-                }
-                self.make_move(translated_move);
-                self.controls.next_move = None;
+            if self.controls.rotation_x != 0.0 {
+                slice.rotate(Axis::X, self.controls.rotation_x * ROTATION_ANGLE);
+            }
+            if self.controls.rotation_z != 0.0 {
+                slice.rotate(Axis::Z, self.controls.rotation_x * ROTATION_ANGLE);
             }
         }
-        
+
+        if self.animate_rotation(&mut am) {
+            self.controls.animated_move = Some(Rc::clone(&am_rc));
+        }
+    }
+
+    fn update_cube_rotation(&mut self) {
         if self.controls.rotation_y != 0.0 {
             self.cube.rotate_y(self.controls.rotation_y * ROTATION_ANGLE);
         }
@@ -272,6 +275,18 @@ impl Game {
         if self.controls.rotation_z != 0.0 {
             self.cube.rotate_z(self.controls.rotation_z * ROTATION_ANGLE);
         }
+    }
+
+    fn update(&mut self) {
+        if let Some(am_rc) = self.controls.animated_move.take() {
+            self.handle_animation_step(am_rc);
+        } else {
+            if let Some(mv) = self.controls.next_move.clone() {
+                self.handle_next_move(mv);
+            }
+        }
+        
+        self.update_cube_rotation();
 
         self.cube.update_side_map();
         if self.controls.animated_move.is_none() {
@@ -334,7 +349,7 @@ impl Game {
         self.cube.apply_grid(&self.grid);
     }
 
-    fn render_once(&mut self, slices: &[CubeSlice; 3]) {
+    fn render_animation_frame(&mut self, slices: &[CubeSlice; 3]) {
         self.screen.clear_screen();
         let slices_vec: Vec<&dyn Renderable> = slices.iter()
             .map(|s| s as &dyn Renderable)
@@ -351,7 +366,7 @@ impl Game {
     fn animate_rotation(&mut self, am: &mut AnimatedMoveInfo) -> bool {
         let angle_diff = Game::get_angle_diff(&am.cube_move);
         
-        self.render_once(&am.slices);
+        self.render_animation_frame(&am.slices);
         let slice_to_move = &mut am.slices[am.slice_id];
         slice_to_move.rotate_around_own_axis(angle_diff);
         am.current_step += 1;
