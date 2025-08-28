@@ -183,6 +183,10 @@ impl Timer {
         self.run = true;
     }
 
+    fn stop(&mut self) {
+        self.run = false;
+    }
+
     fn update_elapsed(&mut self) -> f32 {
         if self.run {
             self.elapsed = self.instant.elapsed().as_secs_f32();
@@ -325,6 +329,11 @@ impl Game {
     }
 
     fn update(&mut self) {
+        if self.grid.is_solved() {
+            self.stop_timer();
+            self.start = false;
+        }
+
         if let Some(am_rc) = self.controls.animated_move.take() {
             self.handle_animation_step(am_rc);
         } else {
@@ -427,6 +436,12 @@ impl Game {
     fn start_timer(&mut self) {
         if let Some(timer) = &mut self.timer {
             timer.start();
+        }
+    }
+
+    fn stop_timer(&mut self) {
+        if let Some(timer) = &mut self.timer {
+            timer.stop();
         }
     }
 
