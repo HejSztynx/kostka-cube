@@ -331,7 +331,6 @@ impl Game {
     fn update(&mut self) {
         if self.grid.is_solved() {
             self.stop_timer();
-            self.start = false;
         }
 
         if let Some(am_rc) = self.controls.animated_move.take() {
