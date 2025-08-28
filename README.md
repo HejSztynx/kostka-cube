@@ -10,10 +10,9 @@
 
 - `Pixels + winit rendering` *– lightweight, fast, and perfect for pixel-based graphics.* [pixels crate.io page](https://crates.io/crates/pixels)
 
-
 - `Manual 2D projection` – all cube transformations and perspective math are done by hand, no external 3D engine.
 
-- `Intuitive key mappings` – designed to feel natural for cubers and provide highest mobility. Nothing better than relearning all of your algorithms on the keyboard all over again!
+- `Intuitive key mappings` – *speedcube-ready* controls designed to feel natural for cubers and provide highest mobility. Nothing better than relearning all of your algorithms on the keyboard all over again!
 
 - `Smooth performance` – Fluid experience with **60 FPS**.
 
