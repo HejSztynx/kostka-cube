@@ -23,6 +23,7 @@ pub struct GameArgs {
     pub height: u32,
     pub rotation_angle: f32,
     pub no_steps: u8,
+    pub projection_scale: f32,
 }
 
 impl GameArgs {
@@ -38,6 +39,7 @@ impl GameArgs {
             height: dimension,
             rotation_angle: rotation_speed.get_rotation_angle(),
             no_steps: move_speed.get_no_steps(),
+            projection_scale: resolution.get_projection_scale(),
         }
     }
 
@@ -64,9 +66,19 @@ impl Resolution {
         use self::Resolution::*;
 
         match self {
-            Low => 180,
-            Medium => 320,
-            High => 480,
+            Low => 100,
+            Medium => 200,
+            High => 320,
+        }
+    }
+
+    fn get_projection_scale(self) -> f32 {
+        use self::Resolution::*;
+
+        match self {
+            Low => 20.0,
+            Medium => 40.0,
+            High => 64.0,
         }
     }
 }

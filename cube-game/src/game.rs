@@ -33,13 +33,12 @@ use crate::{args::GameArgs, controls::{update_controls, Controls}, draw::draw, k
 
 const X_ROT_INIT: f32 = -f32::consts::FRAC_PI_4;
 const Y_ROT_INIT: f32 = f32::consts::FRAC_PI_4;
-
 const X_INIT: f32 = 0.0;
 const Y_INIT: f32 = 0.0;
 const Z_INIT: f32 = 5.0;
 const ZP: f32 = 6.0;
-const PROJECTION_SCALE: f32 = 64.0;
 
+const WINDOW_SIZE: u32 = 320;
 const FPS: u32 = 60;
 const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
 
@@ -47,7 +46,7 @@ pub fn game(args: GameArgs) -> Result<(), Error> {
     env_logger::init();
     let event_loop = EventLoop::new().unwrap();
     let window = {
-        let size = LogicalSize::new(args.width as f64, args.height as f64);
+        let size = LogicalSize::new(WINDOW_SIZE as f64, WINDOW_SIZE as f64);
         let window = WindowBuilder::new()
             .with_title("Kostka")
             .with_inner_size(size)
@@ -145,7 +144,12 @@ pub struct Game {
 
 impl Game {
     pub fn new(args: GameArgs, pixels: Pixels<'static>) -> Game {
-        let screen = Screen::new(ZP, PROJECTION_SCALE);
+        let screen = Screen::new(
+            args.width as usize, 
+            args.height as usize, 
+            ZP, 
+            args.projection_scale,
+        );
 
         let position: (f32, f32, f32) = (X_INIT, Y_INIT, Z_INIT);
         let angle_x = X_ROT_INIT;

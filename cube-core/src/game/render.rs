@@ -11,12 +11,6 @@ use crate::{
     }
 };
 
-pub const SCREEN_X: usize = 320;
-pub const SCREEN_Y: usize = 320;
-
-const SCREEN_X_OFFSET: isize = (SCREEN_X / 2) as isize;
-const SCREEN_Y_OFFSET: isize = (SCREEN_Y / 2) as isize;
-
 const PRINT_CHAR: &str = "██";
 const ANSI_RESET: &str = "\x1b[0m";
 
@@ -41,31 +35,38 @@ pub trait Renderable {
 }
 
 pub struct Screen {
-    screen: Box<[[Option<Color>; SCREEN_X]; SCREEN_Y]>,
+    size_x: usize,
+    size_y: usize,
+    screen: Vec<Vec<Option<Color>>>,
     zp: f32,
     projection_scale: f32,
 }
 
 impl Screen {
-    pub fn new(zp: f32, projection_scale: f32) -> Screen {
+    pub fn new(size_x: usize, size_y: usize, zp: f32, projection_scale: f32) -> Screen {
         Screen {
-            screen: Box::new([[None; SCREEN_X]; SCREEN_Y]),
+            size_x,
+            size_y,
+            screen: vec![vec![None; size_x]; size_y],
             zp,
             projection_scale
         }
     }
 
     pub fn color_at(&self, x: i16, y: i16) -> Option<Color> {
-        self.screen[SCREEN_Y - y as usize - 1][x as usize]
+        self.screen[self.size_y - y as usize - 1][x as usize]
     }
 
     fn project_point(&self, p: Point3D) -> Point2D {
+        let screen_x_offset = (self.size_x / 2) as isize;
+        let screen_y_offset = (self.size_y / 2) as isize;
+
         let multiplier = self.zp / p.z;
         let xp = p.x * multiplier;
         let yp = p.y * multiplier;
 
-        let x_proj = (xp * self.projection_scale) as isize + SCREEN_X_OFFSET;
-        let y_proj = (yp * self.projection_scale) as isize + SCREEN_Y_OFFSET;
+        let x_proj = (xp * self.projection_scale) as isize + screen_x_offset;
+        let y_proj = (yp * self.projection_scale) as isize + screen_y_offset;
 
         Point2D {x: x_proj, y: y_proj}
     }
@@ -73,9 +74,9 @@ impl Screen {
     fn rasterize_triangle(&mut self, triangle: Triangle, color: Color) {
         let Triangle(a, b, c) = triangle;
         let min_x = a.x.min(b.x.min(c.x)).max(0);
-        let max_x = a.x.max(b.x.max(c.x)).min(SCREEN_X as isize - 1);
+        let max_x = a.x.max(b.x.max(c.x)).min(self.size_x as isize - 1);
         let min_y = a.y.min(b.y.min(c.y)).max(0);
-        let max_y = a.y.max(b.y.max(c.y)).min(SCREEN_Y as isize - 1);
+        let max_y = a.y.max(b.y.max(c.y)).min(self.size_y as isize - 1);
 
         for y in min_y..=max_y {
             for x in min_x..=max_x {
@@ -152,8 +153,8 @@ impl Screen {
     }
 
     pub fn print_screen(&self) {
-        for y in (0..(SCREEN_Y)).rev() {
-            for x in 0..(SCREEN_X) {
+        for y in (0..(self.size_y)).rev() {
+            for x in 0..(self.size_x) {
                 match self.screen[y][x] {
                     Some(color) => print!("{}{}{}", color.to_ansi(), PRINT_CHAR, ANSI_RESET),
                     _ => print!("  ")

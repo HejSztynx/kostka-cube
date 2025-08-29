@@ -1,6 +1,7 @@
 use cube_core::utils::cube_utils::Color;
-
 use crate::game::Game;
+
+const X_PADDING: i32 = 10;
 
 pub fn draw(game: &mut Game) {
     for (i, pixel) in game.pixels.frame_mut().chunks_exact_mut(4).enumerate() {
@@ -27,17 +28,19 @@ fn draw_time(game: &mut Game) {
         let seconds = elapsed % 60.0;
 
         let time = if minutes > 0 {
-            format!("{}:{:.2}", minutes, seconds)
+            format!("{}:{:05.2}", minutes, seconds)
         } else {
             format!("{:.2}", seconds)
         };
+
+        let font_size = game.args.projection_scale / 1.5;
         
         draw_text(
             game,
             time.as_str(),
-            10,
-            game.args.height as i32 - 30,
-            30.0,
+            X_PADDING,
+            game.args.height as i32 - font_size as i32,
+            font_size,
         );
     }
 }
