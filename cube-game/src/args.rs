@@ -47,7 +47,8 @@ impl GameArgs {
         let cli = Cli::parse();
 
         GameArgs::new(
-            cli.res,
+            // cli.res,
+            Resolution::High,
             cli.rs,
             cli.ms,
         )
