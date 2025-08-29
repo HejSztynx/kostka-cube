@@ -18,6 +18,28 @@
 
 - `Timer functionality` – measure your solve times directly in the app.
 
+- `Custom settings` - Adjust performance and cube speed settings
+
+## Presets
+
+With some command-line parameters, you can adjust some of the application's attributes such as:
+
+- rendered resolution `--res` (directly affects performance)
+- speed at which the cube rotates `--rs`
+- speed at which layers are rotating during a move `--ms`
+
+There are available 3 presets (*low*, *medium*, *high*) for each setting.
+
+#### Example
+
+```
+kostka --res medium --ms high --rs low
+```
+
+The *medium* presets are set by default if no flags specified.
+
+For further info use the `--help` option.
+
 ## Controls 🎮
 
 Key mappings are designed to resemble real cube rotations as much as possible. Experiment a bit — after a few tries it becomes second nature.
