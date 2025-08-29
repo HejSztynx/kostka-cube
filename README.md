@@ -48,12 +48,6 @@ Key mappings are designed to resemble real cube rotations as much as possible. E
 
 Timer can be switched on and off with the `2` key. You can only start the timer after resetting the game and scrambling the cube with the `1` key.
 
-## In Progress 🚧
-
-Currently working on:
-
-- Custom performance and cube speed settings.
-
 ## Installing 🔧
 
 Make sure that *cargo bin* directory is added to system's `PATH`
