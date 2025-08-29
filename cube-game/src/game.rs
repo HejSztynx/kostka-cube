@@ -39,7 +39,7 @@ const Z_INIT: f32 = 5.0;
 const ZP: f32 = 6.0;
 
 const WINDOW_SIZE: u32 = 320;
-const FPS: u32 = 60;
+const FPS: u32 = 120;
 const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
 
 pub fn game(args: GameArgs) -> Result<(), Error> {

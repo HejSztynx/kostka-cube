@@ -14,7 +14,7 @@
 
 - `Intuitive key mappings` – *speedcube-ready* controls designed to feel natural for cubers and provide highest mobility. Nothing better than relearning all of your algorithms on the keyboard all over again!
 
-- `Smooth performance` – Fluid experience with **60 FPS**.
+- `Smooth performance` – Fluid experience with **120 FPS**.
 
 - `Timer functionality` – measure your solve times directly in the app.
 

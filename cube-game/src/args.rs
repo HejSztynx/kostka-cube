@@ -96,9 +96,9 @@ impl RotationSpeed {
         use self::RotationSpeed::*;
 
         match self {
-            Low => PI / 128.0,
-            Medium => PI / 64.0,
-            High => PI / 32.0,
+            Low => PI / 256.0,
+            Medium => PI / 128.0,
+            High => PI / 64.0,
         }
     }
 }
@@ -115,9 +115,9 @@ impl MoveSpeed {
         use self::MoveSpeed::*;
 
         match self {
-            Low => 32,
-            Medium => 16,
-            High => 8,
+            Low => 64,
+            Medium => 32,
+            High => 16,
         }
     }
 }
