@@ -1,85 +1,77 @@
-use std::collections::HashMap;
+use std::{cell::RefCell, rc::Rc};
 
-use cube_core::cube::core::grid::{GridSide, MoveDirection};
-use winit::keyboard::KeyCode;
+use cube_core::cube::slice::CubeMove;
 
-// functional key mapping
+use crate::{game::Game, render::AnimatedMoveInfo, timer::start_timer};
 
-pub const SCRAMBLE_CODE: KeyCode = KeyCode::Digit1;
-pub const TIMER_CODE: KeyCode = KeyCode::Digit2;
+pub struct Controls {
+    pub animated_move: Option<Rc<RefCell<AnimatedMoveInfo>>>,
+    pub next_move: Option<CubeMove>,
+    pub double_move: bool,
+    pub rotation_x: f32,
+    pub rotation_y: f32,
+    pub rotation_z: f32,
+}
 
-// rotation key mapping
+impl Controls {
+    pub fn new() -> Controls {
+        Controls {
+            animated_move: None,
+            next_move: None,
+            double_move: false,
+            rotation_x: 0.0,
+            rotation_y: 0.0,
+            rotation_z: 0.0,
+        }
+    }
+}
 
-pub const ROTATE_X_CODE: KeyCode = KeyCode::KeyP;
-pub const ROTATE_X_PRIM_CODE: KeyCode = KeyCode::Semicolon;
+fn update_controls_rotations(game: &mut Game) {
+    use crate::key_mapping::*;
 
-pub const ROTATE_Y_CODE: KeyCode = KeyCode::KeyC;
-pub const ROTATE_Y_PRIM_CODE: KeyCode = KeyCode::KeyM;
+    if game.input.key_held(ROTATE_X_CODE) {
+        game.controls.rotation_x = 1.0;
+    } else if game.input.key_held(ROTATE_X_PRIM_CODE) {
+        game.controls.rotation_x = -1.0;
+    } else {
+        game.controls.rotation_x = 0.0;
+    }
+    if game.input.key_held(ROTATE_Y_CODE) {
+        game.controls.rotation_y = 1.0;
+    } else if game.input.key_held(ROTATE_Y_PRIM_CODE) {
+        game.controls.rotation_y = -1.0;
+    } else {
+        game.controls.rotation_y = 0.0;
+    }
+    if game.input.key_held(ROTATE_Z_CODE) {
+        game.controls.rotation_z = 1.0;
+    } else if game.input.key_held(ROTATE_Z_PRIM_CODE) {
+        game.controls.rotation_z = -1.0;
+    } else {
+        game.controls.rotation_z = 0.0;
+    }
+}
 
-pub const ROTATE_Z_CODE: KeyCode = KeyCode::KeyV;
-pub const ROTATE_Z_PRIM_CODE: KeyCode = KeyCode::KeyN;
+pub fn update_controls(game: &mut Game) {
+    use crate::key_mapping::*;
 
-// move key mapping
+    update_controls_rotations(game);
 
-pub const DOUBLE_MOVE: KeyCode = KeyCode::Space;
+    game.controls.double_move = game.input.key_held(DOUBLE_MOVE);
 
-pub const MOVE_R_CODE: KeyCode = KeyCode::KeyI;
-pub const MOVE_R_PRIM_CODE: KeyCode = KeyCode::KeyK;
+    let next_move = move_bindings()
+        .into_iter()
+        .find(|(key_code, _)| game.input.key_pressed(*key_code))
+        .map(|(_, (side, direction))| {
+            CubeMove::from_side(side, direction)
+        }
+    );
 
-pub const MOVE_L_CODE: KeyCode = KeyCode::KeyD;
-pub const MOVE_L_PRIM_CODE: KeyCode = KeyCode::KeyE;
-
-pub const MOVE_U_CODE: KeyCode = KeyCode::KeyU;
-pub const MOVE_U_PRIM_CODE: KeyCode = KeyCode::KeyR;
-
-pub const MOVE_D_CODE: KeyCode = KeyCode::KeyS;
-pub const MOVE_D_PRIM_CODE: KeyCode = KeyCode::KeyL;
-
-pub const MOVE_F_CODE: KeyCode = KeyCode::KeyJ;
-pub const MOVE_F_PRIM_CODE: KeyCode = KeyCode::KeyF;
-
-pub const MOVE_B_CODE: KeyCode = KeyCode::KeyW;
-pub const MOVE_B_PRIM_CODE: KeyCode = KeyCode::KeyO;
-
-pub const MOVE_M_CODE: KeyCode = KeyCode::KeyA;
-pub const MOVE_M_PRIM_CODE: KeyCode = KeyCode::KeyQ;
-
-pub const MOVE_E_CODE: KeyCode = KeyCode::KeyG;
-pub const MOVE_E_PRIM_CODE: KeyCode = KeyCode::KeyH;
-
-pub const MOVE_S_CODE: KeyCode = KeyCode::KeyY;
-pub const MOVE_S_PRIM_CODE: KeyCode = KeyCode::KeyT;
-
-pub fn move_bindings() -> HashMap<KeyCode, (GridSide, MoveDirection)> {
-    use GridSide::*;
-    use MoveDirection::*;
-
-    HashMap::from([
-        (MOVE_R_CODE, (Right, Clockwise)),
-        (MOVE_R_PRIM_CODE, (Right, CounterClockwise)),
-
-        (MOVE_L_CODE, (Left, Clockwise)),
-        (MOVE_L_PRIM_CODE, (Left, CounterClockwise)),
-
-        (MOVE_U_CODE, (Top, Clockwise)),
-        (MOVE_U_PRIM_CODE, (Top, CounterClockwise)),
-
-        (MOVE_D_CODE, (Bottom, Clockwise)),
-        (MOVE_D_PRIM_CODE, (Bottom, CounterClockwise)),
-
-        (MOVE_F_CODE, (Front, Clockwise)),
-        (MOVE_F_PRIM_CODE, (Front, CounterClockwise)),
-
-        (MOVE_B_CODE, (Back, Clockwise)),
-        (MOVE_B_PRIM_CODE, (Back, CounterClockwise)),
-
-        (MOVE_M_CODE, (MiddleX, Clockwise)),
-        (MOVE_M_PRIM_CODE, (MiddleX, CounterClockwise)),
-
-        (MOVE_E_CODE, (MiddleY, Clockwise)),
-        (MOVE_E_PRIM_CODE, (MiddleY, CounterClockwise)),
-        
-        (MOVE_S_CODE, (MiddleZ, Clockwise)),
-        (MOVE_S_PRIM_CODE, (MiddleZ, CounterClockwise)),
-    ])
+    if next_move.is_some() {
+        game.controls.next_move = next_move;
+        if !game.start {
+            game.start = true;
+            start_timer(game);
+        }
+    }
 }

@@ -16,21 +16,20 @@ use game_loop::{game_loop, Time, TimeTrait as _};
 use cube_core::{
     cube::{
         core::{
-            grid::{Grid, GridSide, MoveDirection},
+            grid::{Grid, MoveDirection},
             scramble::scramble
-        }, cube::Cube, slice::{CubeMove, CubeSlice, CubeSliceOrder}, slice_builder::CubeSliceBuilder
+        }, cube::Cube, slice::CubeMove, slice_builder::CubeSliceBuilder
     },
-    game::render::{Renderable, Screen, SCREEN_X, SCREEN_Y},
-    utils::cube_utils::Color
+    game::render::Screen,
 };
 
 use core::f32;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
-use crate::controls::{SCRAMBLE_CODE, TIMER_CODE};
+use crate::{args::GameArgs, controls::{update_controls, Controls}, draw::draw, key_mapping::{SCRAMBLE_CODE, TIMER_CODE}, render::{animate_rotation, AnimatedMoveInfo}, timer::*};
 
 const X_INIT: f32 = 0.0;
 const Y_INIT: f32 = 0.0;
@@ -38,20 +37,14 @@ const Z_INIT: f32 = 5.0;
 const ZP: f32 = 6.0;
 const PROJECTION_SCALE: f32 = 64.0;
 
-const NO_STEPS: u8 = 16;
-const ROTATION_ANGLE: f32 = f32::consts::PI / 64.0;
-
-const WIDTH: u32 = SCREEN_X as u32;
-const HEIGHT: u32 = SCREEN_Y as u32;
-
 const FPS: u32 = 60;
 const TIME_STEP: Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
 
-pub fn game() -> Result<(), Error> {
+pub fn game(args: GameArgs) -> Result<(), Error> {
     env_logger::init();
     let event_loop = EventLoop::new().unwrap();
     let window = {
-        let size = LogicalSize::new(WIDTH as f64, HEIGHT as f64);
+        let size = LogicalSize::new(args.width as f64, args.height as f64);
         let window = WindowBuilder::new()
             .with_title("Kostka")
             .with_inner_size(size)
@@ -64,9 +57,9 @@ pub fn game() -> Result<(), Error> {
     let pixels = {
         let window_size = window.inner_size();
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, Arc::clone(&window));
-        Pixels::new(WIDTH, HEIGHT, surface_texture)?
+        Pixels::new(args.width, args.height, surface_texture)?
     };
-    let game = Game::new(pixels);
+    let game = Game::new(args, pixels);
 
     let res = game_loop(
         event_loop,
@@ -79,7 +72,7 @@ pub fn game() -> Result<(), Error> {
         },
         move |g| {
             // Drawing
-            g.game.draw();
+            draw(&mut g.game);
             if let Err(err) = g.game.pixels.render() {
                 log_error("pixels.render", err);
                 g.exit();
@@ -108,11 +101,11 @@ pub fn game() -> Result<(), Error> {
 
                 // Switch timer
                 if g.game.input.key_pressed(TIMER_CODE) {
-                    g.game.toggle_timer();
+                    toggle_timer(&mut g.game);
                 }
 
                 // Update controls
-                g.game.update_controls();
+                update_controls(&mut g.game);
 
                 // Resize the window
                 if let Some(size) = g.game.input.window_resized() {
@@ -134,81 +127,21 @@ fn log_error<E: std::error::Error + 'static>(method_name: &str, err: E) {
     }
 }
 
-struct AnimatedMoveInfo {
-    slices: [CubeSlice; 3],
-    slice_id: usize,
-    current_step: u8,
-    cube_move: CubeMove,
-}
-
-struct Controls {
-    animated_move: Option<Rc<RefCell<AnimatedMoveInfo>>>,
-    next_move: Option<CubeMove>,
-    double_move: bool,
-    rotation_x: f32,
-    rotation_y: f32,
-    rotation_z: f32,
-}
-
-impl Controls {
-    fn new() -> Controls {
-        Controls {
-            animated_move: None,
-            next_move: None,
-            double_move: false,
-            rotation_x: 0.0,
-            rotation_y: 0.0,
-            rotation_z: 0.0,
-        }
-    }
-}
-
-struct Timer {
-    elapsed: f32,
-    run: bool,
-    instant: Box<Instant>,
-}
-
-impl Timer {
-    fn new() -> Self {
-        Timer {
-            elapsed: 0.0,
-            run: false,
-            instant: Box::new(Instant::now()),
-        }
-    }
-
-    fn start(&mut self) {
-        self.instant = Box::new(Instant::now());
-        self.run = true;
-    }
-
-    fn stop(&mut self) {
-        self.run = false;
-    }
-
-    fn update_elapsed(&mut self) -> f32 {
-        if self.run {
-            self.elapsed = self.instant.elapsed().as_secs_f32();
-        }
-        self.elapsed
-    }
-}
-
-struct Game {
-    start: bool,
-    screen: Screen,
-    cube: Cube,
-    grid: Grid,
-    controls: Controls,
-    input: WinitInputHelper,
-    pixels: Pixels<'static>,
-    font: Font<'static>,
-    timer: Option<Timer>,
+pub struct Game {
+    pub args: GameArgs,
+    pub start: bool,
+    pub screen: Screen,
+    pub cube: Cube,
+    pub grid: Grid,
+    pub controls: Controls,
+    pub input: WinitInputHelper,
+    pub pixels: Pixels<'static>,
+    pub font: Font<'static>,
+    pub timer: Option<Timer>,
 }
 
 impl Game {
-    pub fn new(pixels: Pixels<'static>) -> Game {
+    pub fn new(args: GameArgs, pixels: Pixels<'static>) -> Game {
         let screen = Screen::new(ZP, PROJECTION_SCALE);
 
         let position: (f32, f32, f32) = (X_INIT, Y_INIT, Z_INIT);
@@ -226,6 +159,7 @@ impl Game {
         let font = rusttype::Font::try_from_bytes(font_data as &[u8]).unwrap();
 
         Game {
+            args,
             start: false,
             screen,
             cube,
@@ -237,57 +171,7 @@ impl Game {
             timer: None,
         }
     }
-    
-    fn update_controls_rotations(&mut self) {
-        use crate::controls::*;
 
-        if self.input.key_held(ROTATE_X_CODE) {
-            self.controls.rotation_x = 1.0;
-        } else if self.input.key_held(ROTATE_X_PRIM_CODE) {
-            self.controls.rotation_x = -1.0;
-        } else {
-            self.controls.rotation_x = 0.0;
-        }
-        if self.input.key_held(ROTATE_Y_CODE) {
-            self.controls.rotation_y = 1.0;
-        } else if self.input.key_held(ROTATE_Y_PRIM_CODE) {
-            self.controls.rotation_y = -1.0;
-        } else {
-            self.controls.rotation_y = 0.0;
-        }
-        if self.input.key_held(ROTATE_Z_CODE) {
-            self.controls.rotation_z = 1.0;
-        } else if self.input.key_held(ROTATE_Z_PRIM_CODE) {
-            self.controls.rotation_z = -1.0;
-        } else {
-            self.controls.rotation_z = 0.0;
-        }
-    }
-
-    fn update_controls(&mut self) {
-        use crate::controls::*;
-
-        self.update_controls_rotations();
-
-        self.controls.double_move = self.input.key_held(DOUBLE_MOVE);
-
-        let next_move = move_bindings()
-            .into_iter()
-            .find(|(key_code, _)| self.input.key_pressed(*key_code))
-            .map(|(_, (side, direction))| {
-               CubeMove::from_side(side, direction)
-            }
-        );
-
-        if next_move.is_some() {
-            self.controls.next_move = next_move;
-            if !self.start {
-                self.start = true;
-                self.start_timer();
-            }
-        }
-    }
-    
     fn handle_next_move(&mut self, mv: CubeMove) {
         let mut translated_move = self.cube.translate_move(mv);
         if self.controls.double_move {
@@ -301,36 +185,36 @@ impl Game {
         let mut am = am_rc.borrow_mut();
         for slice in am.slices.iter_mut() {
             if self.controls.rotation_y != 0.0 {
-                slice.rotate(Axis::Y, self.controls.rotation_y * ROTATION_ANGLE);
+                slice.rotate(Axis::Y, self.controls.rotation_y * self.args.rotation_angle);
             }
             if self.controls.rotation_x != 0.0 {
-                slice.rotate(Axis::X, self.controls.rotation_x * ROTATION_ANGLE);
+                slice.rotate(Axis::X, self.controls.rotation_x * self.args.rotation_angle);
             }
             if self.controls.rotation_z != 0.0 {
-                slice.rotate(Axis::Z, self.controls.rotation_z * ROTATION_ANGLE);
+                slice.rotate(Axis::Z, self.controls.rotation_z * self.args.rotation_angle);
             }
         }
 
-        if self.animate_rotation(&mut am) {
+        if animate_rotation(self, &mut am) {
             self.controls.animated_move = Some(Rc::clone(&am_rc));
         }
     }
 
     fn update_cube_rotation(&mut self) {
         if self.controls.rotation_y != 0.0 {
-            self.cube.rotate_y(self.controls.rotation_y * ROTATION_ANGLE);
+            self.cube.rotate_y(self.controls.rotation_y * self.args.rotation_angle);
         }
         if self.controls.rotation_x != 0.0 {
-            self.cube.rotate_x(self.controls.rotation_x * ROTATION_ANGLE);
+            self.cube.rotate_x(self.controls.rotation_x * self.args.rotation_angle);
         }
         if self.controls.rotation_z != 0.0 {
-            self.cube.rotate_z(self.controls.rotation_z * ROTATION_ANGLE);
+            self.cube.rotate_z(self.controls.rotation_z * self.args.rotation_angle);
         }
     }
 
     fn update(&mut self) {
         if self.grid.is_solved() {
-            self.stop_timer();
+            stop_timer(self);
         }
 
         if let Some(am_rc) = self.controls.animated_move.take() {
@@ -350,135 +234,11 @@ impl Game {
         }
     }
 
-    fn draw(&mut self) {
-        for (i, pixel) in self.pixels.frame_mut().chunks_exact_mut(4).enumerate() {
-            let x = (i % WIDTH as usize) as u32;
-            let y = (i / WIDTH as usize) as u32;
-
-            let rgba = if let Some(color) = self.screen.color_at(x as i16, y as i16) {
-                color.rgba()
-            } else {
-                Color::Black.rgba()
-            };
-
-            pixel.copy_from_slice(&rgba);
-        }
-
-        self.draw_time();
-    }
-
-    fn draw_time(&mut self) {
-        if let Some(timer) = self.timer.as_mut() {
-            let elapsed = timer.update_elapsed();
-
-            let minutes = (elapsed / 60.0).floor() as u32;
-            let seconds = elapsed % 60.0;
-
-            let time = if minutes > 0 {
-                format!("{}:{:.2}", minutes, seconds)
-            } else {
-                format!("{:.2}", seconds)
-            };
-            
-            self.draw_text(
-                time.as_str(),
-                10,
-                HEIGHT as i32 - 30,
-                30.0,
-            );
-        }
-    }
-
-    fn draw_text(
-        &mut self,
-        text: &str,
-        x: i32,
-        y: i32,
-        scale_px: f32,
-    ) {
-        use rusttype::{Scale, point};
-
-        let frame = self.pixels.frame_mut();
-        let font = &self.font;
-        let scale = Scale::uniform(scale_px);
-        let v_metrics = font.v_metrics(scale);
-        let glyphs: Vec<_> = font
-            .layout(text, scale, point(x as f32, y as f32 + v_metrics.ascent))
-            .collect();
-
-        let background_rgba = Color::Black.rgba();
-        for glyph in glyphs {
-            if let Some(bb) = glyph.pixel_bounding_box() {
-                glyph.draw(|gx, gy, v| {
-                    let px = gx as i32 + bb.min.x;
-                    let py = gy as i32 + bb.min.y;
-                    if px >= 0 && py >= 0 && (px as u32) < WIDTH && (py as u32) < HEIGHT {
-                        let idx = ((py as u32 * WIDTH + px as u32) * 4) as usize;
-                        let intensity = (v * 255.0) as u8;
-                        frame[idx] = intensity.saturating_add(background_rgba[0]);         // R
-                        frame[idx + 1] = intensity.saturating_add(background_rgba[1]);     // G
-                        frame[idx + 2] = intensity.saturating_add(background_rgba[2]);     // B
-                        frame[idx + 3] = 255;                                              // A
-                    }
-                });
-            }
-        }
-    }
-
     fn reset_game(&mut self) {
         self.start = false;
-        self.reset_timer();
+        reset_timer(self);
         scramble(&mut self.grid);
         self.cube.apply_grid(&self.grid);
-    }
-
-    fn toggle_timer(&mut self) {
-        match &mut self.timer {
-            Some(_) => self.timer = None,
-            None if !self.start => self.timer = Some(Timer::new()),
-            None => {}
-        }
-    }
-
-    fn start_timer(&mut self) {
-        if let Some(timer) = &mut self.timer {
-            timer.start();
-        }
-    }
-
-    fn stop_timer(&mut self) {
-        if let Some(timer) = &mut self.timer {
-            timer.stop();
-        }
-    }
-
-    fn reset_timer(&mut self) {
-        match &mut self.timer {
-            Some(_) => self.timer = Some(Timer::new()),
-            None => {}
-        }
-    }
-
-    fn get_angle_diff(cube_move: &CubeMove) -> f32 {
-        let mut angle_diff = f32::consts::FRAC_PI_2 / (NO_STEPS as f32);
-        
-        if let MoveDirection::CounterClockwise = cube_move.direction {
-            angle_diff *= -1.0;
-        }
-        
-        if let CubeSliceOrder::LAST = cube_move.order {
-            angle_diff *= -1.0;
-        }
-        
-        if let MoveDirection::Double = cube_move.direction {
-            angle_diff *= 2.0;
-        }
-
-        if let GridSide::MiddleY = cube_move.grid_side {
-            angle_diff *= -1.0;
-        }
-        
-        angle_diff
     }
 
     fn make_move(&mut self, cube_move: CubeMove) {
@@ -491,35 +251,5 @@ impl Game {
         })));
         self.grid.apply_move(cube_move);
         self.cube.apply_grid(&self.grid);
-    }
-
-    fn render_animation_frame(&mut self, slices: &[CubeSlice; 3]) {
-        self.screen.clear_screen();
-        let slices_vec: Vec<&dyn Renderable> = slices.iter()
-            .map(|s| s as &dyn Renderable)
-            .collect();
-
-        self.screen.render(slices_vec);
-    }
-
-    fn finish_animating_rotation(&mut self) {
-        self.controls.animated_move = None;
-        self.cube.apply_grid(&self.grid);
-    }
-
-    fn animate_rotation(&mut self, am: &mut AnimatedMoveInfo) -> bool {
-        let angle_diff = Game::get_angle_diff(&am.cube_move);
-        
-        self.render_animation_frame(&am.slices);
-        let slice_to_move = &mut am.slices[am.slice_id];
-        slice_to_move.rotate_around_own_axis(angle_diff);
-        am.current_step += 1;
-
-        if am.current_step == NO_STEPS {
-            self.finish_animating_rotation();
-            false
-        } else {
-            true
-        }
     }
 }
