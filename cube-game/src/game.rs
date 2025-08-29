@@ -31,6 +31,9 @@ use std::time::Duration;
 
 use crate::{args::GameArgs, controls::{update_controls, Controls}, draw::draw, key_mapping::{SCRAMBLE_CODE, TIMER_CODE}, render::{animate_rotation, AnimatedMoveInfo}, timer::*};
 
+const X_ROT_INIT: f32 = -f32::consts::FRAC_PI_4;
+const Y_ROT_INIT: f32 = f32::consts::FRAC_PI_4;
+
 const X_INIT: f32 = 0.0;
 const Y_INIT: f32 = 0.0;
 const Z_INIT: f32 = 5.0;
@@ -145,8 +148,8 @@ impl Game {
         let screen = Screen::new(ZP, PROJECTION_SCALE);
 
         let position: (f32, f32, f32) = (X_INIT, Y_INIT, Z_INIT);
-        let angle_x = -f32::consts::FRAC_PI_4;
-        let angle_y = f32::consts::FRAC_PI_4;
+        let angle_x = X_ROT_INIT;
+        let angle_y = Y_ROT_INIT;
 
         let mut cube = Cube::new(position, angle_y, angle_x);
         let grid = Grid::new();

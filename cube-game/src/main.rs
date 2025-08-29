@@ -11,15 +11,7 @@ use pixels::Error;
 use crate::args::*;
 
 fn main() -> Result<(), Error> {
-    let resolution = Resolution::MEDIUM;
-    let rotation_speed = RotationSpeed::MEDIUM;
-    let move_speed = MoveSpeed::MEDIUM;
-
-    let args = GameArgs::new(
-        resolution,
-        rotation_speed,
-        move_speed
-    );
+    let args = GameArgs::parse();
 
     game::game(args)?;
 

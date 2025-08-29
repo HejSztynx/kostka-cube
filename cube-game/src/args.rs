@@ -1,5 +1,23 @@
 use std::f32::consts::PI;
 
+use clap::{Parser, ValueEnum};
+
+#[derive(Parser, Debug)]
+#[command(author, version, about = "Kostka Cube", long_about = None)]
+struct Cli {
+    /// Set resolution (low, medium, high)
+    #[arg(long, value_enum, default_value_t = Resolution::Medium)]
+    res: Resolution,
+
+    /// Set rotation speed (low, medium, high)
+    #[arg(long, value_enum, default_value_t = RotationSpeed::Medium)]
+    rs: RotationSpeed,
+
+    /// Set move speed (low, medium, high)
+    #[arg(long, value_enum, default_value_t = MoveSpeed::Medium)]
+    ms: MoveSpeed,
+}
+
 pub struct GameArgs {
     pub width: u32,
     pub height: u32,
@@ -8,7 +26,7 @@ pub struct GameArgs {
 }
 
 impl GameArgs {
-    pub fn new(
+    fn new(
         resolution: Resolution,
         rotation_speed: RotationSpeed,
         move_speed: MoveSpeed,
@@ -22,12 +40,23 @@ impl GameArgs {
             no_steps: move_speed.get_no_steps(),
         }
     }
+
+    pub fn parse() -> GameArgs {
+        let cli = Cli::parse();
+
+        GameArgs::new(
+            cli.res,
+            cli.rs,
+            cli.ms,
+        )
+    }
 }
 
+#[derive(Copy, Clone, Debug, ValueEnum)]
 pub enum Resolution {
-    LOW,
-    MEDIUM,
-    HIGH,
+    Low,
+    Medium,
+    High,
 }
 
 impl Resolution {
@@ -35,17 +64,18 @@ impl Resolution {
         use self::Resolution::*;
 
         match self {
-            LOW => 180,
-            MEDIUM => 320,
-            HIGH => 480,
+            Low => 180,
+            Medium => 320,
+            High => 480,
         }
     }
 }
 
+#[derive(Copy, Clone, Debug, ValueEnum)]
 pub enum RotationSpeed {
-    SLOW,
-    MEDIUM,
-    FAST,
+    Low,
+    Medium,
+    High,
 }
 
 impl RotationSpeed {
@@ -53,17 +83,18 @@ impl RotationSpeed {
         use self::RotationSpeed::*;
 
         match self {
-            SLOW => PI / 128.0,
-            MEDIUM => PI / 64.0,
-            FAST => PI / 32.0,
+            Low => PI / 128.0,
+            Medium => PI / 64.0,
+            High => PI / 32.0,
         }
     }
 }
 
+#[derive(Copy, Clone, Debug, ValueEnum)]
 pub enum MoveSpeed {
-    SLOW,
-    MEDIUM,
-    FAST,
+    Low,
+    Medium,
+    High,
 }
 
 impl MoveSpeed {
@@ -71,9 +102,9 @@ impl MoveSpeed {
         use self::MoveSpeed::*;
 
         match self {
-            SLOW => 32,
-            MEDIUM => 16,
-            FAST => 8,
+            Low => 32,
+            Medium => 16,
+            High => 8,
         }
     }
 }
