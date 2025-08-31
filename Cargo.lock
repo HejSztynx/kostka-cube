@@ -456,6 +456,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cube-core"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4d61e913073ab102506b8beb20f3b86f40df8cb5682078f5905cf379ea537b8"
+dependencies = [
+ "rand",
+]
+
+[[package]]
 name = "cursor-icon"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -837,10 +846,10 @@ checksum = "e2db585e1d738fc771bf08a151420d3ed193d9d895a36df7f6f8a9456b911ddc"
 
 [[package]]
 name = "kostka"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "clap",
- "cube-core",
+ "cube-core 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger",
  "error-iter",
  "game-loop",
