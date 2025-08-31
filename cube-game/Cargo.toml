@@ -9,7 +9,7 @@ repository = "https://github.com/hejsztynx/kostka-cube"
 readme = "../README.md"
 
 [dependencies]
-cube-core = "1.0.0"
+cube-core = "1.0.1"
 clap = { version = "4", features = ["derive"] }
 rusttype = "0.9"
 log = "0.4"

@@ -450,16 +450,7 @@ checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
 
 [[package]]
 name = "cube-core"
-version = "1.0.0"
-dependencies = [
- "rand",
-]
-
-[[package]]
-name = "cube-core"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2e608fe97aca249aa6541bf8e162a55fe271c566111c0ca846b29d902a935a8"
+version = "1.0.1"
 dependencies = [
  "rand",
 ]
@@ -849,7 +840,7 @@ name = "kostka"
 version = "1.0.0"
 dependencies = [
  "clap",
- "cube-core 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cube-core",
  "env_logger",
  "error-iter",
  "game-loop",

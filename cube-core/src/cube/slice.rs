@@ -13,6 +13,7 @@ use crate::{
 };
 
 const TIEBREAKER_WEIGHT: f32 = 0.001;
+const MAGIC_THINGY: f32 = 0.2;
 
 #[derive(Clone)]
 pub struct FaceSlice {
@@ -42,7 +43,7 @@ impl FaceSlice {
     }
 
     pub fn avg_z(&self) -> f32 {
-        (self.corners[0].z + self.corners[1].z + self.corners[2].z + self.corners[3].z) / 4.0
+        (self.corners[0].z + self.corners[1].z + self.corners[2].z + self.corners[3].z) / 4.0 + MAGIC_THINGY
     }
 }
 

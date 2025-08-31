@@ -101,6 +101,7 @@ impl Cube {
 
         self.rotate_x(-TIEBRAKER_ROTATION);
         self.rotate_y(TIEBRAKER_ROTATION);
+        self.rotate_z(TIEBRAKER_ROTATION);
 
         for &side in &[GridSide::Right, GridSide::Left, GridSide::Top, GridSide::Bottom, GridSide::Front, GridSide::Back] {
             let (best_face_idx, _) = self.faces
@@ -126,6 +127,7 @@ impl Cube {
             side_map.insert(side, actual_side);
         }
 
+        self.rotate_z(-TIEBRAKER_ROTATION);
         self.rotate_y(-TIEBRAKER_ROTATION);
         self.rotate_x(TIEBRAKER_ROTATION);
 
